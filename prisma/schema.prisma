@@ -1,0 +1,652 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model appointment_reasons {
+  id             BigInt       @id @default(autoincrement())
+  appointment_id BigInt
+  reason         String?      @db.VarChar(255)
+  created_at     DateTime     @default(now())
+  appointments   appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@index([appointment_id])
+}
+
+model appointment_symptoms {
+  id             BigInt       @id @default(autoincrement())
+  appointment_id BigInt
+  symptom        String?      @db.VarChar(255)
+  created_at     DateTime     @default(now())
+  appointments   appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@index([appointment_id])
+}
+
+model appointments {
+  id                   BigInt                 @id @default(autoincrement())
+  user_id              BigInt
+  title                String?                @db.VarChar(255)
+  provider_name        String                 @db.VarChar(255)
+  location             String?                @db.VarChar(255)
+  appointment_at       DateTime
+  include_logs         Boolean                @default(false)
+  notes                String?
+  reminder_enabled     Boolean                @default(false)
+  reminder_time        DateTime?
+  status               appointment_status     @default(UPCOMING)
+  overall_mood         overall_mood?
+  remark               String?
+  to_remember          String?
+  created_at           DateTime               @default(now())
+  updated_at           DateTime
+  appointment_reasons  appointment_reasons[]
+  appointment_symptoms appointment_symptoms[]
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  prep_visits          prep_visits?
+
+  @@index([appointment_at])
+  @@index([user_id])
+}
+
+model blog_categories {
+  id              BigInt          @id @default(autoincrement())
+  blog_id         BigInt
+  category_id     BigInt
+  created_at      DateTime        @default(now())
+  blogs           blogs           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
+  mstr_categories mstr_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([blog_id, category_id])
+  @@index([blog_id])
+  @@index([category_id])
+}
+
+model blog_media {
+  id            BigInt          @id @default(autoincrement())
+  blog_id       BigInt
+  media_url     String
+  media_type    blog_media_type
+  thumbnail_url String?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime
+  blogs         blogs           @relation(fields: [blog_id], references: [id], onDelete: Cascade)
+
+  @@index([blog_id])
+}
+
+model blogs {
+  id              BigInt            @id @default(autoincrement())
+  uuid            String            @unique @db.Uuid
+  type            blog_type
+  title           String            @db.VarChar(255)
+  description     String
+  read_time       Int
+  status          blog_status       @default(DRAFT)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime
+  blog_categories blog_categories[]
+  blog_media      blog_media[]
+
+  @@index([type])
+}
+
+model channel_categories {
+  id         BigInt           @id @default(autoincrement())
+  channel_id BigInt
+  category   channel_category
+  created_at DateTime         @default(now())
+  updated_at DateTime
+  channels   channels         @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+
+  @@index([channel_id])
+}
+
+model channel_members {
+  id         BigInt   @id @default(autoincrement())
+  channel_id BigInt
+  user_id    BigInt
+  created_at DateTime @default(now())
+  updated_at DateTime
+  channels   channels @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([channel_id, user_id])
+  @@index([channel_id])
+  @@index([user_id, channel_id])
+  @@index([user_id])
+}
+
+model channels {
+  id                 BigInt               @id @default(autoincrement())
+  created_by         BigInt
+  name               String               @db.VarChar(150)
+  user_name          String?              @db.VarChar(255)
+  image              String?
+  description        String
+  category_id        BigInt?
+  total_members      BigInt               @default(0)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime
+  channel_categories channel_categories[]
+  channel_members    channel_members[]
+  users              users                @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  posts              posts[]
+
+  @@index([created_by])
+}
+
+model comment_reports {
+  id         BigInt   @id @default(autoincrement())
+  comment_id BigInt
+  user_id    BigInt
+  reason     String
+  created_at DateTime @default(now())
+  comments   comments @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([comment_id])
+  @@index([user_id])
+}
+
+model comments {
+  id              BigInt            @id @default(autoincrement())
+  post_id         BigInt
+  user_id         BigInt
+  comment         String
+  created_at      DateTime          @default(now())
+  updated_at      DateTime
+  comment_reports comment_reports[]
+  posts           posts             @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  users           users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id])
+  @@index([user_id])
+}
+
+model community_block_users {
+  id                                                 BigInt   @id @default(autoincrement())
+  user_id                                            BigInt
+  blocked_user_id                                    BigInt
+  reason                                             String?
+  created_at                                         DateTime @default(now())
+  users_community_block_users_blocked_user_idTousers users    @relation("community_block_users_blocked_user_idTousers", fields: [blocked_user_id], references: [id], onDelete: Cascade)
+  users_community_block_users_user_idTousers         users    @relation("community_block_users_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, blocked_user_id])
+  @@index([user_id, blocked_user_id])
+}
+
+model email_verification {
+  email_id   String   @id @db.VarChar(150)
+  code       String   @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime
+}
+
+model experiment_logs {
+  id            BigInt      @id @default(autoincrement())
+  experiment_id BigInt
+  date          DateTime
+  notes         String?
+  created_at    DateTime    @default(now())
+  experiments   experiments @relation(fields: [experiment_id], references: [id], onDelete: Cascade)
+
+  @@unique([experiment_id, date])
+  @@index([experiment_id])
+}
+
+model experiments {
+  id               BigInt            @id @default(autoincrement())
+  user_id          BigInt
+  title            String            @db.VarChar(255)
+  duration_days    Int
+  start_date       DateTime
+  end_date         DateTime
+  actions          String[]
+  reminder_enabled Boolean           @default(false)
+  reminder_time    String?           @db.VarChar(10)
+  status           experiment_status @default(ACTIVE)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime
+  experiment_logs  experiment_logs[]
+  users            users             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([user_id])
+}
+
+model followers {
+  id                               BigInt   @id @default(autoincrement())
+  follow_by                        BigInt
+  follow_to                        BigInt
+  created_at                       DateTime @default(now())
+  users_followers_follow_byTousers users    @relation("followers_follow_byTousers", fields: [follow_by], references: [id], onDelete: Cascade)
+  users_followers_follow_toTousers users    @relation("followers_follow_toTousers", fields: [follow_to], references: [id], onDelete: Cascade)
+
+  @@unique([follow_by, follow_to])
+  @@index([follow_by, follow_to])
+}
+
+model help_support {
+  id          BigInt   @id @default(autoincrement())
+  user_id     BigInt
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model log_flares {
+  id         BigInt              @id @default(autoincrement())
+  user_id    BigInt
+  symptoms   String[]
+  remedy     String[]
+  reason     String[]
+  feeling    log_flare_feeling
+  intensity  log_flare_intensity
+  notes      String?
+  created_at DateTime            @default(now())
+  updated_at DateTime
+  users      users               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model onboarding {
+  id                        BigInt                      @id @default(autoincrement())
+  user_id                   BigInt                      @unique
+  brings_reason             brings_reason
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime
+  users                     users                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_conditions           user_conditions[]
+  user_dashboard            user_dashboard?
+  user_tracking_preferences user_tracking_preferences[]
+}
+
+model post_media {
+  id         BigInt          @id @default(autoincrement())
+  post_id    BigInt
+  media_url  String
+  media_type post_media_type
+  created_at DateTime        @default(now())
+  updated_at DateTime
+  posts      posts           @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id])
+}
+
+model post_reports {
+  id         BigInt   @id @default(autoincrement())
+  post_id    BigInt
+  user_id    BigInt
+  reason     String
+  created_at DateTime @default(now())
+  posts      posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id])
+  @@index([user_id])
+  @@index([user_id, post_id])
+}
+
+model posts {
+  id             BigInt         @id @default(autoincrement())
+  post_type      post_type      @default(INDIVIDUAL)
+  channel_id     BigInt?
+  user_id        BigInt
+  title          String         @db.VarChar(255)
+  description    String
+  total_likes    BigInt         @default(0)
+  total_dislikes BigInt         @default(0)
+  total_comments BigInt         @default(0)
+  is_edited      Boolean        @default(false)
+  created_at     DateTime       @default(now())
+  updated_at     DateTime
+  is_active      Boolean        @default(true)
+  comments       comments[]
+  post_media     post_media[]
+  post_reports   post_reports[]
+  channels       channels?      @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+  users          users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  reactions      reactions[]
+
+  @@index([channel_id])
+  @@index([post_type])
+  @@index([user_id, created_at])
+  @@index([user_id])
+}
+
+model prep_visits {
+  id             BigInt       @id @default(autoincrement())
+  appointment_id BigInt       @unique
+  logs           String[]     @default([])
+  question       String?
+  share          String?
+  goals          String?
+  created_at     DateTime     @default(now())
+  updated_at     DateTime
+  appointments   appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+}
+
+model reactions {
+  id         BigInt        @id @default(autoincrement())
+  post_id    BigInt
+  user_id    BigInt
+  reaction   reaction_type
+  created_at DateTime      @default(now())
+  updated_at DateTime
+  posts      posts         @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  users      users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, user_id])
+  @@index([post_id])
+  @@index([user_id])
+}
+
+model user_body_logs {
+  id                  BigInt               @id @default(autoincrement())
+  user_id             BigInt
+  symptoms            String[]
+  created_at          DateTime             @default(now())
+  updated_at          DateTime
+  users               users                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_mood_history   user_mood_history?
+  user_period_history user_period_history?
+  user_sleep_history  user_sleep_history?
+}
+
+model user_checkin_helps {
+  id            BigInt        @id @default(autoincrement())
+  checkin_id    BigInt
+  help          String?       @db.VarChar(255)
+  created_at    DateTime      @default(now())
+  user_checkins user_checkins @relation(fields: [checkin_id], references: [id], onDelete: Cascade)
+
+  @@index([checkin_id])
+}
+
+model user_checkin_symptoms {
+  id            BigInt        @id @default(autoincrement())
+  checkin_id    BigInt
+  symptom       String?       @db.VarChar(255)
+  created_at    DateTime      @default(now())
+  user_checkins user_checkins @relation(fields: [checkin_id], references: [id], onDelete: Cascade)
+
+  @@index([checkin_id])
+}
+
+model user_checkins {
+  id                    BigInt                  @id @default(autoincrement())
+  user_id               BigInt
+  week_start            DateTime
+  week_end              DateTime
+  overall_mood          overall_mood
+  notes                 String?
+  weekly_insight        String?
+  created_at            DateTime                @default(now())
+  updated_at            DateTime
+  user_checkin_helps    user_checkin_helps[]
+  user_checkin_symptoms user_checkin_symptoms[]
+  users                 users                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, week_start])
+  @@index([user_id])
+}
+
+model user_conditions {
+  id            BigInt     @id @default(autoincrement())
+  onboarding_id BigInt
+  condition     condition
+  created_at    DateTime   @default(now())
+  onboarding    onboarding @relation(fields: [onboarding_id], references: [id], onDelete: Cascade)
+
+  @@unique([onboarding_id, condition])
+  @@index([onboarding_id])
+}
+
+model user_dashboard {
+  id            BigInt     @id @default(autoincrement())
+  onboarding_id BigInt     @unique
+  content       String[]
+  created_at    DateTime   @default(now())
+  updated_at    DateTime
+  onboarding    onboarding @relation(fields: [onboarding_id], references: [id], onDelete: Cascade)
+
+  @@index([onboarding_id])
+}
+
+model user_mood_history {
+  id             BigInt         @id @default(autoincrement())
+  body_logs_id   BigInt         @unique
+  mood           overall_mood
+  created_at     DateTime       @default(now())
+  updated_at     DateTime
+  user_body_logs user_body_logs @relation(fields: [body_logs_id], references: [id], onDelete: Cascade)
+}
+
+model user_period_history {
+  id             BigInt         @id @default(autoincrement())
+  body_logs_id   BigInt         @unique
+  period_quality String
+  created_at     DateTime       @default(now())
+  updated_at     DateTime
+  user_body_logs user_body_logs @relation(fields: [body_logs_id], references: [id], onDelete: Cascade)
+}
+
+model user_sleep_history {
+  id             BigInt         @id @default(autoincrement())
+  body_logs_id   BigInt         @unique
+  sleep_duration String
+  sleep_quality  String
+  created_at     DateTime       @default(now())
+  updated_at     DateTime
+  user_body_logs user_body_logs @relation(fields: [body_logs_id], references: [id], onDelete: Cascade)
+}
+
+model user_tracking_preferences {
+  id            BigInt          @id @default(autoincrement())
+  onboarding_id BigInt
+  track_type    track_type
+  frequency     track_frequency
+  created_at    DateTime        @default(now())
+  onboarding    onboarding      @relation(fields: [onboarding_id], references: [id], onDelete: Cascade)
+
+  @@unique([onboarding_id, track_type])
+  @@index([onboarding_id])
+}
+
+model users {
+  id                                                                 BigInt                  @id @default(autoincrement())
+  uuid                                                               String                  @unique @db.Uuid
+  email_id                                                           String                  @unique(map: "uq_users_email") @db.VarChar(255)
+  password                                                           String                  @db.VarChar(255)
+  timezone                                                           String?                 @db.VarChar(100)
+  is_active                                                          Boolean                 @default(true)
+  created_at                                                         DateTime                @default(now())
+  updated_at                                                         DateTime
+  appointments                                                       appointments[]
+  channel_members                                                    channel_members[]
+  channels                                                           channels[]
+  comment_reports                                                    comment_reports[]
+  comments                                                           comments[]
+  community_block_users_community_block_users_blocked_user_idTousers community_block_users[] @relation("community_block_users_blocked_user_idTousers")
+  community_block_users_community_block_users_user_idTousers         community_block_users[] @relation("community_block_users_user_idTousers")
+  experiments                                                        experiments[]
+  followers_followers_follow_byTousers                               followers[]             @relation("followers_follow_byTousers")
+  followers_followers_follow_toTousers                               followers[]             @relation("followers_follow_toTousers")
+  help_support                                                       help_support[]
+  log_flares                                                         log_flares[]
+  onboarding                                                         onboarding?
+  post_reports                                                       post_reports[]
+  posts                                                              posts[]
+  reactions                                                          reactions[]
+  user_body_logs                                                     user_body_logs[]
+  user_checkins                                                      user_checkins[]
+  users_profile                                                      users_profile?
+}
+
+model users_profile {
+  user_id         BigInt   @id
+  profile_id      String?  @unique @db.VarChar(255)
+  user_name       String?  @db.VarChar(255)
+  first_name      String   @db.VarChar(255)
+  last_name       String   @db.VarChar(255)
+  profile_image   String?  @db.VarChar(255)
+  total_checkins  BigInt   @default(0)
+  total_posts     BigInt   @default(0)
+  total_followers BigInt   @default(0)
+  total_following BigInt   @default(0)
+  created_at      DateTime @default(now())
+  updated_at      DateTime
+  users           users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model mstr_categories {
+  id              BigInt            @id @default(autoincrement())
+  name            String            @db.VarChar(255)
+  total_blogs     BigInt            @default(0)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime
+  blog_categories blog_categories[]
+}
+
+model admin {
+  id            BigInt   @id @default(autoincrement())
+  uuid          String   @unique @db.Uuid
+  email_id      String   @unique(map: "uq_admin_email") @db.VarChar(255)
+  password      String   @db.VarChar(255)
+  profile_image String?  @db.VarChar(255)
+  full_name     String   @db.VarChar(255)
+  timezone      String?  @db.VarChar(100)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime
+}
+
+enum appointment_status {
+  UPCOMING
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+enum blog_category {
+  PCOS
+  FERTILITY
+  FITNESS
+  MENTAL_HEALTH
+  PREGNANCY
+  LIFESTYLE
+  HORMONES
+  OTHER
+}
+
+enum blog_media_type {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+}
+
+enum blog_type {
+  ARTICLE
+  VIDEO
+  AUDIO
+  OTHER
+}
+
+enum brings_reason {
+  MANAGING_A_CONDITION
+  TTC
+  PERIMENOPAUSE_OR_MENOPAUSE
+  EXPLORING_MY_BODY
+  JOIN_COMMUNITY_ONLY
+}
+
+enum channel_category {
+  PCOS
+  FERTILITY
+  FITNESS
+  MENTAL_HEALTH
+  PREGNANCY
+  LIFESTYLE
+  HORMONES
+  OTHER
+}
+
+enum condition {
+  PCOS
+  ENDOMETRIOSIS
+  ADENOMYOSIS
+  FIBROIDS
+  PMDD
+  OTHER
+}
+
+enum experiment_status {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum log_flare_feeling {
+  LOW
+  MEDIUM
+  HIGH
+  ENERGIZED
+}
+
+enum log_flare_intensity {
+  MILD
+  MODERATE
+  INTENSE
+  OVERWHELMING
+}
+
+enum overall_mood {
+  GOOD
+  OKAY
+  MEH
+  ROUGH
+  LOW
+  BAD
+}
+
+enum post_media_type {
+  IMAGE
+  VIDEO
+}
+
+enum post_type {
+  INDIVIDUAL
+  CHANNEL
+}
+
+enum reaction_type {
+  LIKE
+  DISLIKE
+}
+
+enum track_frequency {
+  DAILY
+  WEEKLY
+  ENABLED
+  DISABLED
+}
+
+enum track_type {
+  MOOD
+  SLEEP
+  PERIOD
+}
+
+enum blog_status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
