@@ -116,7 +116,7 @@ export default function ChannelTable() {
 
 
                       <td>
-                        <Eye size={12} color="#747474" className="cursor-pointer" />
+                        <Eye size={12} color="#747474" className="cursor-pointer" onClick={()=>console.log("clicked")}/>
                       </td>
                     </tr>
                   ))}
@@ -125,14 +125,7 @@ export default function ChannelTable() {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-between text-xs text-gray-400 mt-4">
-            <span>Showing 3 of 12.8k members</span>
-            <div className="flex gap-3 text-purple-500">
-              <button>Previous</button>
-              <button>Next</button>
-            </div>
-          </div>
+    
         </div>
       }
     </>

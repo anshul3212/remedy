@@ -369,7 +369,9 @@ const DashTop = ({
   // }, []);
 
   const handleLogout = async () => {
-    alert("logout"); 
+   localStorage.removeItem("token")
+   alert("logout successfully");
+   router.replace("/login")
   };
 
   useEffect(() => {
@@ -420,93 +422,10 @@ const DashTop = ({
       <div className="hidden  lg:flex items-center justify-end gap-6 w-[60%] h-full relative">
         <div className="flex h-full items-center gap-6">
           {/* theme icon */}
-          <MoonIcon fill="#000"/>
+          {/* <MoonIcon fill="#000"/> */}
           {/* earth icon */}
-          <Globe/>
-          {/* Notification Icon */}
-          <div
-            ref={notifRef}
-            className="relative cursor-pointer h-full"
-            onClick={() => setShowNotifications((prev) => !prev)}
-          >
-            <div
-              className={`relative h-full flex items-center justify-center px-2  ${
-                showNotifications ? "bg-[#f6f6f9]" : ""
-              }`}
-            >
-              {/* Bell Icon */}
-
-              <BellIcon />
-
-              {/*  Badge */}
-              <span className="absolute top-4 right-0 p-1 font-inter text-[#ffffff] flex items-center justify-center text-[10px] bg-[#F04438] rounded-full">3</span>
-            </div>
-
-            {/* Notification Drawer with Animation */}
-            <AnimatePresence>
-              {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 top-[85.5px] mt-2 w-100 h-72 bg-[#ffffff] z-50 text-black overflow-y-auto scrollbar-hide"
-                >
-                  <div className="p-3 flex items-center justify-between ">
-                    <span className=" font-medium text-[#000000] text-lg">
-                      Notifications
-                    </span>
-                    <span className=" font-normal text-[#00000080] text-sm underline">
-                      Unread (3)
-                    </span>
-                  </div>
-                  <ul
-                    className="max-h-full overflow-y-auto scrollbar-hide"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                  >
-                    {notifications.map(
-                      ({ id, text, icon, bgColor, message, time }) => (
-                        <li
-                          key={id}
-                          className="flex items-start gap-3 px-3 py-2 hover:bg-[#e8e8eb] cursor-pointer transition justify-between"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div
-                              className={`h-10 w-10 rounded-full flex items-center justify-center ${bgColor}`}
-                            >
-                              <span>{icon}</span>
-                            </div>
-
-                            <div className="flex flex-col items-start justify-start gap-2">
-                              <span className="text-sm font-medium text-[#000000] ">
-                                {text}
-                              </span>
-                              <span className="text-xs font-normal text-[#000000bf] ">
-                                {message}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center">
-                            <span className="text-xs font-normal text-[#000000bf] ">
-                              {time}
-                            </span>
-                          </div>
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* message icons */}
-          <div className="relative cursor-pointer h-full flex items-center justify-center">
-
-          <Mail />
-          <span className="absolute top-4 -right-2 p-1 font-inter text-[#ffffff] flex items-center justify-center text-[10px] bg-[#F04438] rounded-full">333</span>
-          </div>
+          {/* <Globe/> */}
+  
         </div>
 
         <div className="relative h-full  w-[35%] " ref={menuRef} >

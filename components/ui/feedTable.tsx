@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Eye, MoreVertical } from "lucide-react";
-import { useUser } from "@/context/userContext";
+
+import { Eye } from "lucide-react";
+
 import { useRouter } from "next/navigation";
-import { useReport } from "@/context/reportPostContext";
+
+import { usePost } from "@/context/getAllPostContext";
 
 export default function FeedTable() {
   const router = useRouter();
   const [openId, setOpenId] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const { users } = useUser();
 
-  const {reportedPosts,loading}= useReport();
+  const {posts,fetchPosts} = usePost();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,7 +35,7 @@ export default function FeedTable() {
   return (
     <div className="w-full bg-white rounded-xl p-4">
       <h2 className="font-inter font-medium text-[14px] text-black mb-3">
-        List Of All Reported Posts
+        List Of All Posts
       </h2>
 
       {/* ✅ X-axis scroll wrapper */}
@@ -57,7 +57,7 @@ export default function FeedTable() {
             </thead>
 
             <tbody>
-              {reportedPosts.map((p) => (
+              {posts.map((p) => (
                 <tr
                   key={p.id}
                   className="font-inter font-medium text-[12px] text-[#747474]"
@@ -130,14 +130,7 @@ export default function FeedTable() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between text-xs text-gray-400 mt-4">
-        <span>Showing 3 of 12.8k members</span>
-        <div className="flex gap-3 text-purple-500">
-          <button>Previous</button>
-          <button>Next</button>
-        </div>
-      </div>
+
     </div>
   );
 }

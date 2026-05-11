@@ -217,14 +217,6 @@ export default function CommunityTable() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-between text-xs text-gray-400 mt-4">
-              <span>Showing 3 of 12.8k members</span>
-              <div className="flex gap-3 text-purple-500">
-                <button>Previous</button>
-                <button>Next</button>
-              </div>
-            </div>
           </div>
         </div>
       )}

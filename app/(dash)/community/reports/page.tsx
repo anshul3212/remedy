@@ -103,7 +103,7 @@ const filteredContent = filterType
      </div>
           <div className="w-full bg-white rounded-xl p-4">
             <h2 className="font-inter font-medium text-[14px] text-black mb-3">
-              List Of All Channels
+              List Of Reports
             </h2>
 
             {/* ✅ X-axis scroll wrapper */}
@@ -159,14 +159,6 @@ const filteredContent = filterType
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-between text-xs text-gray-400 mt-4">
-              <span>Showing 3 of 12.8k members</span>
-              <div className="flex gap-3 text-purple-500">
-                <button>Previous</button>
-                <button>Next</button>
-              </div>
-            </div>
           </div>
         </div>
       )}

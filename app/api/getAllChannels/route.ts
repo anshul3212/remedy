@@ -105,6 +105,7 @@ export async function GET() {
   try {
     const channels = await prisma.channels.findMany({
       include: {
+        posts:true,
         _count: {
           select: {
             posts: true,

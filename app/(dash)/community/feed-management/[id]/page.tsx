@@ -12,6 +12,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useReport } from "@/context/reportPostContext";
 import axios from "axios";
+import { usePost } from "@/context/getAllPostContext";
 
 
 
@@ -19,10 +20,10 @@ const page = () => {
   const router = useRouter();
   const { id } = useParams();
 
-  const {reportedPosts,loading,fetchReportedPosts} = useReport();
+  const {posts,loading,fetchPosts} = usePost();
 
 
-  const post = reportedPosts.find(
+  const post = posts.find(
     (u) => u.id.trim().toLowerCase() === String(id).trim().toLowerCase(),
   );
   if(!post){
@@ -91,7 +92,7 @@ const deletePost = async (postId: string) => {
     );
     console.log(res.data)
     alert("post deleted");
-    fetchReportedPosts();
+    fetchPosts();
     router.push("/community/feed-management")
 
   } catch (error: any) {
