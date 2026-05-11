@@ -131,6 +131,8 @@ model channels {
   total_members      BigInt               @default(0)
   created_at         DateTime             @default(now())
   updated_at         DateTime
+  channel_type       channel_type         @default(STANDARD)
+  is_active          Boolean              @default(true)
   channel_categories channel_categories[]
   channel_members    channel_members[]
   users              users                @relation(fields: [created_by], references: [id], onDelete: Cascade)
@@ -649,4 +651,10 @@ enum blog_status {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum channel_type {
+  POPULAR
+  RECOMMENDED
+  STANDARD
 }

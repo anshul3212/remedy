@@ -33,6 +33,7 @@ export interface Channel {
   name: string;
   user_name: string | null;
   image: string | null;
+  channel_type: string;
   description: string;
   category_id: string | null;
   total_members: string; // coming as string in API
@@ -84,7 +85,7 @@ export function ChannelProvider({
       setLoading(true);
 
       const res = await axios.get<ChannelResponse>(
-        "http://localhost:3000/api/getAllChannels",
+        "/api/getAllChannels",
         {
           headers: {
             Authorization: `Bearer ${token}`,

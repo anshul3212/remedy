@@ -74,7 +74,7 @@ const [loading, setLoading] = useState(false);
 
     const fetchBlogs = async () => {
       try {
-        setLoading(true)
+        setLoading(true) 
         const res = await axios.get("/api/getAllBlogs");
 
         const formattedBlogs: Blog[] = res.data.blogs.map((b: any) => ({
@@ -102,7 +102,7 @@ const [loading, setLoading] = useState(false);
       try {
         setLoading(true)
         const res = await axios.get(
-          `http://3.13.92.66/api/v1/admin/blog/get-all-categories?page=1&limit=50`,{
+          `${process.env.NEXT_PUBLIC_DEV_URL}/blog/get-all-categories?page=1&limit=50`,{
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

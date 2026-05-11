@@ -12,7 +12,6 @@ const page = () => {
   const { category, media,fetchBlogs,setMedia } = useBlog();
 
   
-  
 
   const mediaTypeMap: Record<string, string> = {
   IMAGE: "ARTICLE",
@@ -79,11 +78,38 @@ const payload = {
 const uploadBlogs = async () => {
   
   const token = localStorage.getItem("token");
+  if (!media.media_url) {
+    alert("Please upload media");
+    return;
+  }
+
+  if (!selectedCategories.length) {
+    alert("Please select at least one category");
+    return;
+  }
+
+  if (!title.trim()) {
+    alert("Please enter title");
+    return;
+  }
+
+  if (!readTime.trim()) {
+    alert("Please enter read time");
+    return;
+  }
+
+  if (!content.trim()) {
+    alert("Please enter content");
+    return;
+  }
+
 
   try {
 
+    
+
     const res = await axios.post(
-      "http://3.13.92.66/api/v1/admin/blog/create-blog",
+      `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-blog`,
       payload,
       {
         headers: {
@@ -179,26 +205,6 @@ alert("blog submitted successfully")
               width={"w-[30%]"}
             />
 
-            {/* <div className="flex flex-col gap-2 w-[70%] ">
-              <div className="grid grid-cols-3  mt-6">
-                {["hr", "min", "sec"].map((c: string, idx: number) => (
-                  <label
-                    key={idx}
-                    className="flex items-center gap-2 cursor-pointer font-inter font-medium text-[14px] text-[#747272]"
-                  >
-                    <input
-                      type="radio"
-                      name="category"
-                      value={time}
-                      onChange={(e)=>setTime(e.target.value)}
-                      className="accent-blue-500"
-                      
-                    />
-                    {c}
-                  </label>
-                ))}
-              </div>
-            </div> */}
           </div>
         </div>
       </div>

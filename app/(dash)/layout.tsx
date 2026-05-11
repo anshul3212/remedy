@@ -8,6 +8,7 @@ import { UserProvider } from "@/context/userContext";
 import { BlogProvider } from "@/context/blogContext";
 import { ReportProvider } from "@/context/reportPostContext";
 import { ChannelProvider } from "@/context/channelContext";
+import { ReportedContentProvider } from "@/context/reportedContentContext";
 
 
 export default function DashLayout({
@@ -20,7 +21,8 @@ export default function DashLayout({
   const [openSidebar, setOpenSidebar] = useState(false);
 
   return (
-    <ChannelProvider>
+<ReportedContentProvider>
+<ChannelProvider>
     <ReportProvider>
     <BlogProvider>
 <UserProvider>
@@ -51,5 +53,6 @@ export default function DashLayout({
 </BlogProvider>
 </ReportProvider>
 </ChannelProvider>
+</ReportedContentProvider>
   );
 }

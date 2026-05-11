@@ -123,7 +123,7 @@ export function ReportProvider({
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:3000/api/getAllReportedPosts",
+        "/api/getAllReportedPosts",
         {
           headers: {
             Authorization: `Bearer ${token}`,
