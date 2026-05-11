@@ -33,7 +33,7 @@ const page = () => {
 
     try {
       await axios.post(
-        "http://3.13.92.66/api/v1/admin/blog/create-category",
+        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-category`,
         {
           name: name.replace(" ", "_").toUpperCase(),
         },

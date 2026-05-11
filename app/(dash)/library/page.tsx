@@ -11,7 +11,7 @@ const page = () => {
   const [openFilter, setOpenFilter] = useState(false);
 
   const router = useRouter();
-
+ 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (

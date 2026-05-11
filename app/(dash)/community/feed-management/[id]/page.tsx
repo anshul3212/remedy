@@ -78,7 +78,7 @@ const deletePost = async (postId: string) => {
 
   try {
     const res = await axios.post(
-      "http://3.13.92.66/api/v1/admin/community/remove-post",
+      `${process.env.NEXT_PUBLIC_DEV_URL}/community/remove-post`,
       {
         "post_id": postId, 
       },
@@ -177,7 +177,7 @@ const deletePost = async (postId: string) => {
           <div className="w-full rounded-md shadow-[0px_0px_2.51px_0px_#00000040] flex flex-col gap-4 max-h-50 overflow-y-auto">
           
              <p className="font-inter text-lg font-medium text-[#111111] sticky top-0 z-10 bg-[#f7f7fe] p-4 ">
-                Reports (2)
+                Reports {`${post?._count.post_reports}`}
               </p>
               <div className="px-4 pb-4 flex flex-col gap-4">
 

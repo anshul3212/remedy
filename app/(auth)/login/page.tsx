@@ -25,10 +25,10 @@ const LoginLeft = () => {
   const handleLogin = async () => {
     try {
       const res = await axios.post(
-        "http://3.13.92.66/api/v1/auth/sign-in-admin",
+        `${process.env.NEXT_PUBLIC_DEV_AUTH_URL}/sign-in-admin`,
         payload,
       );
-      
+       
       localStorage.setItem("token", res.data.data.auth_key);
       setEmail("");
       setPassword("");

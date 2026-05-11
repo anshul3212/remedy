@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useChannel } from "@/context/channelContext";
+import axios from "axios";
 
 export default function CommunityTable() {
   const [openId, setOpenId] = useState<number | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-const {channels, loading}= useChannel();
+  const { channels, loading, fetchChannels } = useChannel();
 
   const categories = ["popular", "recommended"];
   const [selectedCategory, setSelectedCategory] = useState("popular");
@@ -25,16 +26,26 @@ const {channels, loading}= useChannel();
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+  if (!channels) return;
+
+  const filtered = channels
+    .filter((c) =>
+      (c.channel_type || "").toLowerCase() ===
+      selectedCategory.toLowerCase()
+    )
+    .map((c) => Number(c.id));
+
+  setSelectedPosts(filtered);
+}, [selectedCategory, channels]);
 
   // select toggle
   const toggleSelect = (id: number) => {
     setSelectedPosts((prev) =>
-      prev.includes(id)
-        ? prev.filter((p) => p !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
   };
 
@@ -48,16 +59,53 @@ const {channels, loading}= useChannel();
     }
   };
 
-  //  APPLY CATEGORY 
-  const applyBulkAction = () => {
-    console.log("ADD:", selectedCategory, selectedPosts);
-    setSelectedPosts([]);
+  
+  const removeBulkAction = async() => {
+    try {
+      const selectedChannels = channels.filter((channel) =>
+        selectedPosts.includes(Number(channel.id)),
+      );
+
+      const channelIds = selectedChannels.map((c) => c.id);
+
+      const res = await axios.put(
+        "/api/updateChannelCategory",
+        {
+          channelIds,
+          category: "STANDARD",
+        }
+      );
+      alert("removed from category");
+      fetchChannels();
+
+      setSelectedPosts([]);
+    } catch (error: any) {
+      console.log(error);
+    }
   };
 
-  //  REMOVE CATEGORY 
-  const removeBulkAction = () => {
-    console.log("REMOVE:", selectedCategory, selectedPosts);
-    setSelectedPosts([]);
+  const updateCategory = async () => {
+    try {
+      const selectedChannels = channels.filter((channel) =>
+        selectedPosts.includes(Number(channel.id)),
+      );
+
+      const channelIds = selectedChannels.map((c) => c.id);
+
+      const res = await axios.put(
+        "/api/updateChannelCategory",
+        {
+          channelIds,
+          category: selectedCategory,
+        }
+      );
+      alert("category updated");
+      fetchChannels();
+
+      setSelectedPosts([]);
+    } catch (error: any) {
+      console.log(error);
+    }
   };
 
   return (
@@ -68,22 +116,17 @@ const {channels, loading}= useChannel();
         </div>
       ) : (
         <div className=" font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
-      <h1 className="font-inter font-medium text-[20px] text-[#000000]">
-        Channel Details
-      </h1>
-
+          <h1 className="font-inter font-medium text-[20px] text-[#000000]">
+            Channel Details
+          </h1>
 
           {/* CLEAN  ACTION BAR */}
           <div className="flex flex-wrap gap-2 items-center mb-4 text-xs bg-gray-50 p-2 rounded-lg">
-            
-
             {/* CATEGORY SELECT */}
             <select
-              className="border px-2 py-1 rounded text-xs bg-white"
+              className="border border-[#706d6db0] text-[#7d7d7d] px-4 py-2 outline-none rounded-sm text-xs bg-white "
               value={selectedCategory}
-              onChange={(e) =>
-                setSelectedCategory(e.target.value)
-              }
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
               {categories.map((c) => (
                 <option key={c} value={c}>
@@ -94,9 +137,9 @@ const {channels, loading}= useChannel();
 
             {/* ADD */}
             <button
-              onClick={applyBulkAction}
+              onClick={updateCategory}
               disabled={!selectedPosts.length}
-              className="px-3 py-1 bg-purple-600 text-white rounded disabled:opacity-40 hover:bg-purple-700"
+              className="px-4 py-2 bg-purple-600 text-white rounded-sm disabled:opacity-40 hover:bg-purple-700"
             >
               Add to Category
             </button>
@@ -105,7 +148,7 @@ const {channels, loading}= useChannel();
             <button
               onClick={removeBulkAction}
               disabled={!selectedPosts.length}
-              className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-40 hover:bg-red-600"
+              className="px-4 py-2 bg-red-500 text-white rounded-sm disabled:opacity-40 hover:bg-red-600"
             >
               Remove
             </button>
@@ -113,91 +156,76 @@ const {channels, loading}= useChannel();
             {/* SELECT ALL */}
             <button
               onClick={toggleSelectAll}
-              className="px-3 py-1 border rounded hover:bg-gray-100"
+              className="px-4 py-2 rounded-sm border hover:bg-gray-100 border-[#706d6db0] text-[#7d7d7d]"
             >
               {selectedPosts.length === channels?.length
                 ? "Unselect All"
                 : "Select All"}
             </button>
-
-            <span className="text-gray-500 ml-auto">
-              Selected: {selectedPosts.length}
-            </span>
           </div>
 
           {/* TABLE */}
-        
 
           <div className="w-full bg-white rounded-xl p-4">
-  <h2 className="font-inter font-medium text-[14px] text-black mb-3">
-    List Of All Channels
-  </h2>
+            <h2 className="font-inter font-medium text-[14px] text-black mb-3">
+              List Of All Channels
+            </h2>
 
-  {/* ✅ X-axis scroll wrapper */}
-  <div className="w-full overflow-x-auto">
-    
-    {/* ✅ Y-axis scroll container */}
-    <div className="max-h-98 min-h-98 overflow-y-auto scrollbar-hide">
+            {/* ✅ X-axis scroll wrapper */}
+            <div className="w-full overflow-x-auto">
+              {/* ✅ Y-axis scroll container */}
+              <div className="max-h-98 min-h-98 overflow-y-auto scrollbar-hide">
+                <table className="table-fixed w-full">
+                  {/* ✅ Sticky Header */}
+                  <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
+                    <tr>
+                      <th className="py-3 text-left w-1/6">Select</th>
+                      <th className="text-left py-3 w-1/6">Channel</th>
+                      <th className="text-left py-3 w-1/6 px-4">Created By</th>
+                      <th className="text-left py-3 w-1/6">Members</th>
+                      <th className="text-left py-3 w-1/6">Posts</th>
+                      <th className="text-left py-3 w-1/6">Status</th>
+                    </tr>
+                  </thead>
 
-      <table className="table-fixed w-full">
-        
-        {/* ✅ Sticky Header */}
-        <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
-          <tr>
-            <th className="py-3 text-left w-1/6">Select</th>
-            <th className="text-left py-3 w-1/6">Channel</th>
-            <th className="text-left py-3 w-1/6 px-4">Created By</th>
-            <th className="text-left py-3 w-1/6">Members</th>
-            <th className="text-left py-3 w-1/6">Posts</th>
-            <th className="text-left py-3 w-1/6">Status</th>
-          </tr>
-        </thead>
+                  <tbody>
+                    {channels.map((b) => (
+                      <tr
+                        key={b.id}
+                        className="font-inter font-medium text-[12px] text-[#747474]"
+                      >
+                        <td className="py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedPosts.includes(Number(b.id))}
+                            onChange={() => toggleSelect(Number(b.id))}
+                          />
+                        </td>
+                        <td className="py-3 truncate overflow-hidden whitespace-nowrap">
+                          {b.name}
+                        </td>
+                        <td className="px-4">{b.user_name}</td>
 
-        <tbody>
-          {channels.map((b) => (
-            <tr
-              key={b.id}
-              className="font-inter font-medium text-[12px] text-[#747474]"
-            >
-                <td className="py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedPosts.includes(Number(b.id))}
-                          onChange={() => toggleSelect(Number(b.id))}
-                        />
-                      </td>
-              <td className="py-3 truncate overflow-hidden whitespace-nowrap">{b.name}</td>
-              <td className="px-4">
-  {b.user_name}
-</td>
-              
+                        <td>{b.total_members}</td>
+                        <td>{b._count.posts}</td>
 
-              <td>
-                
-                 {b.total_members}
-              </td>
-              <td>{b._count.posts}</td>
+                        <td>Active</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-              <td>Active</td>
-            
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {/* Footer */}
-  <div className="flex justify-between text-xs text-gray-400 mt-4">
-    <span>Showing 3 of 12.8k members</span>
-    <div className="flex gap-3 text-purple-500">
-      <button>Previous</button>
-      <button>Next</button>
-    </div>
-  </div>
-</div>
-       
-
+            {/* Footer */}
+            <div className="flex justify-between text-xs text-gray-400 mt-4">
+              <span>Showing 3 of 12.8k members</span>
+              <div className="flex gap-3 text-purple-500">
+                <button>Previous</button>
+                <button>Next</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </>

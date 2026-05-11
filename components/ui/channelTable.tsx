@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useBlog } from "@/context/blogContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -17,12 +16,6 @@ export default function ChannelTable() {
 
   const { blogs, fetchBlogs } = useBlog();
   const { channels, loading } = useChannel();
-
-
-  //  const filteredBlogs = filterType
-  //   ? blogs.filter((b) => b.type === filterType)
-  //   : blogs;
-
 
 
   useEffect(() => {
@@ -50,7 +43,7 @@ export default function ChannelTable() {
 
     try {
       await axios.post(
-        "http://3.13.92.66/api/v1/admin/blog/remove-blog",
+        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/remove-blog`,
         {
           blog_id: blogId,
         },
