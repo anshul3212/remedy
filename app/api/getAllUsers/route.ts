@@ -1,27 +1,19 @@
+import { generateReadUrl } from "@/helper/awsUrl";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // const userHeader = req.headers.get("user");
+
+    // const user = userHeader
+    //   ? JSON.parse(userHeader)
+    //   : null;
+
+    // console.log("Logged In User:", user);
+
     const totalUsers = await prisma.users.count();
-    // const startOfDay = new Date();
-    // startOfDay.setHours(0, 0, 0, 0);
-
-    // const endOfDay = new Date();
-    // endOfDay.setHours(23, 59, 59, 999);
-
-    // const activeToday = await prisma.users.count({
-    //   where: {
-    //     is_active: true,
-    //     last_active_at: {
-    //       gte: startOfDay,
-    //       lte: endOfDay,
-    //     },
-    //   },
-    // });
-
-    // console.log(activeToday)
 
     const users = await prisma.users.findMany({
   include: {
@@ -29,6 +21,7 @@ export async function GET() {
       select: {
         first_name: true,
         last_name: true, 
+        profile_image: true,
       },
     },
   },
@@ -37,8 +30,25 @@ export async function GET() {
   },
 });
 
+
+const formattedUsers = await Promise.all(
+  users.map(async (user) => ({
+    ...user,
+
+    users_profile: {
+      ...user.users_profile,
+
+      profile_image: user.users_profile?.profile_image
+        ? await generateReadUrl(
+            user.users_profile.profile_image
+          )
+        : null,
+    },
+  }))
+);
+
     return NextResponse.json(
-      { message: "all users found", users: serialize(users),totalUsers },
+      { message: "all users found", users: serialize(formattedUsers),totalUsers },
       {
     status: 200,
     headers: {

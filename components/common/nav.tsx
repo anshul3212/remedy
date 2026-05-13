@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BellIcon, ChevronDown, Globe, Mail, MoonIcon, Search, SettingsIcon, TextAlignJustify } from "lucide-react";
+import {  ArrowLeft, BellIcon, ChevronDown, Globe, Mail, MoonIcon, Search, SettingsIcon, TextAlignJustify } from "lucide-react";
 // import Topmenu from "./topMenu";
 // import axios from "axios";
 
@@ -318,19 +318,14 @@ const notifications = [
 
 const DashTop = ({
   setOpenSidebar,
-  collapsed,
-  setCollapsed,
 }: {
   setOpenSidebar: any;
-  collapsed: boolean;
-  setCollapsed: (val: boolean) => void;
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [search, setSearch] = useState("");
   const notifRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [name, setName] = useState("");
 
   const router = useRouter();
   useEffect(() => {
@@ -368,12 +363,30 @@ const DashTop = ({
   //   fetchUser();
   // }, []);
 
+  const [userName, setUserName] = useState("");
+const [userImage, setUserImage] = useState("");
+
+useEffect(() => {
+  const storedName =
+    localStorage.getItem("user_name");
+
+  const storedImage =
+    localStorage.getItem("user_image");
+
+  if (storedName) {
+    setUserName(storedName);
+  }
+
+  if (storedImage) {
+    setUserImage(storedImage);
+  }
+}, []);
+
   const handleLogout = async () => {
    localStorage.removeItem("token")
    alert("logout successfully");
    router.replace("/login")
   };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -388,12 +401,6 @@ const DashTop = ({
   return (
     <div className="bg-[#fbfaff] h-24 border-[#eee7e7] border-b flex items-center justify-between  w-full relative">
       <div className="flex items-center gap-4 ml-4">
-        <div
-          onClick={() => setCollapsed(!collapsed)}
-          className={`cursor-pointer bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] rounded-full p-2 hidden lg:block`}
-        >
-          <ArrowLeft color="#ffffff" size={14}/>
-        </div>
 
 
 
@@ -436,7 +443,7 @@ const DashTop = ({
             <div className="flex items-center gap-4 ">
               <div className="w-16 h-16 rounded-full overflow-hidden relative">
                 <Image
-                  src="/logo.png"
+                  src={userImage||"/logo.png"}
                   alt="profile"
                   fill
                   className="object-cover absolute"
@@ -447,7 +454,7 @@ const DashTop = ({
 
               <div className="flex flex-col">
 <span className="text-[#000000] font-inter  font-normal text-sm capitalize">
-                Jay Hargudson
+                {userName}
               </span>
               <span className="text-[#667085] font-inter  font-medium text-[12px] capitalize">
                 Admin
@@ -469,7 +476,7 @@ const DashTop = ({
                 className="absolute right-0 top-[85.5px] mt-2  bg-[#ffffff] w-[70%]  z-50"
               >
                 <ul className="text-[#000000] text-sm  font-medium px-2">
-                  <div className="flex items-center hover:bg-[#e8e8eb]">
+                  {/* <div className="flex items-center hover:bg-[#e8e8eb]">
                     <svg
                       width="16"
                       height="16"
@@ -506,7 +513,7 @@ const DashTop = ({
                     >
                       Profile
                     </li>
-                  </div>
+                  </div> */}
 
                   <div className="flex items-center hover:bg-[#e8e8eb]">
                     <svg

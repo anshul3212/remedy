@@ -15,8 +15,12 @@ const LoginLeft = () => {
 
   const [checked, setChecked] = useState(false);
 
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const isDisabled = !email.trim() || !password.trim();
+
 
   const payload = {
     email_id: email,
@@ -28,20 +32,26 @@ const LoginLeft = () => {
         `${process.env.NEXT_PUBLIC_DEV_AUTH_URL}/sign-in-admin`,
         payload,
       );
+
+      console.log(res.data)
        
       localStorage.setItem("token", res.data.data.auth_key);
+      localStorage.setItem("user_name",res.data.data.full_name);
+      localStorage.setItem("user_image",res.data.data.profile_image);
+
       setEmail("");
       setPassword("");
-      router.push("/dashboard");
+      router.push("/users");
     } catch (error) {
+      alert("invalid email or password")
       console.log(error);
     }
   };
 
   return (
-    <aside className=" flex flex-col items-center h-screen p-10 ">
-      <div className="flex items-center justify-center ">
-        <div className="relative w-40 h-40 rounded-full overflow-hidden">
+    <aside className=" flex justify-between h-full items-center relative overflow-hidden gap-4 rounded-xl ">
+      <div className=" w-full flex flex-col gap-8 items-center justify-center">
+<div className="relative w-30 h-30 rounded-full overflow-hidden">
           <Image
             src={"/logo.png"}
             alt="logo"
@@ -49,16 +59,34 @@ const LoginLeft = () => {
             className="object-cover absolute"
           />
         </div>
+        <div className="flex flex-col text-white">
+        <h1 className="font-inter text-5xl font-bold leading-6.5 tracking-widest">Welcome!</h1>
+        <div>
+        <h1 className="font-inter text-5xl font-bold px-20 tracking-widest">to heyRMDY</h1>
+        </div>
+        </div>
+      </div>
+      
+      <div className="bg-[white] p-4 rounded-xl h-full flex flex-col items-center justify-center">
+      <div className="flex items-center justify-center">
+        {/* <div className="relative w-20 h-20 rounded-full overflow-hidden">
+          <Image
+            src={"/logo.png"}
+            alt="logo"
+            fill
+            className="object-cover absolute"
+          />
+        </div> */}
       </div>
 
-      <div className="flex flex-col items-center justify-center mt-8 md:mt-20 lg:mt-16 gap-10">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center justify-center gap-2">
-          <h3 className="font-medium  text-[#000000] text-lg">
-            Welcome Back !
+          <h3 className="font-medium  text-[#000000] text-5xl">
+            Sign In
           </h3>
-          <span className=" font-normal text-sm text-[#000000bf]">
-            Sign in to continue to heyRMDY.
-          </span>
+          {/* <span className=" font-normal text-sm text-[#000000bf]">
+            Sign in to heyRMDY admin pannel
+          </span> */}
         </div>
 
         <form
@@ -78,7 +106,7 @@ const LoginLeft = () => {
               <label className=" font-medium text-sm text-[#000000] ">
                 Password
               </label>
-              <label className=" font-normal text-sm text-[#0f0f0fbf] cursor-pointer">
+              <label className=" font-normal text-sm text-[#0f0f0fbf] cursor-pointer" onClick={()=>router.push("/forget-password")}>
                 Forgot password?
               </label>
             </div>
@@ -122,7 +150,27 @@ const LoginLeft = () => {
             </label>
           </div>
 
-          <Button text={"Log In"} onClick={handleLogin} />
+          {/* <Button
+  text={"Sign In"}
+  onClick={handleLogin}
+  disabled={isDisabled}
+  className={`transition-all duration-300 ${
+    isDisabled
+      ? "opacity-50 cursor-not-allowed"
+      : "opacity-100 cursor-pointer"
+  }`}
+/> */}
+<button
+type="submit"
+        className={`bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] w-full text-[#ffffff] h-10 rounded-sm fontr-inter  font-normal text-lg cursor-pointer transition-all duration-300 ${
+    isDisabled
+      ? "opacity-50 cursor-not-allowed"
+      : "opacity-100 cursor-pointer"
+  }`}
+        onClick={handleLogin}
+      >
+        Sign In
+      </button>
         </form>
 
         {/* <div className="mt-4 pt-2 text-center">
@@ -134,13 +182,7 @@ const LoginLeft = () => {
 
           
         </div> */}
-
-        <p className=" text-sm font-normal text-[#000000]">
-          Don't have an account ?{" "}
-          <Link href={"/register"} className="font-semibold text-[#3381F8]">
-            Signup now
-          </Link>
-        </p>
+      </div>
       </div>
     </aside>
   );

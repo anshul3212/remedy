@@ -26,14 +26,14 @@ interface Blog {
   id: bigint;
   uuid: string;
 
-  type: "BLOG" | "NEWS" | string; // replace with your enum values
+  type: "BLOG" | "NEWS" | string;
 
   title: string;
   description: string;
 
   read_time: number;
 
-  status: "DRAFT" | "PUBLISHED" | string; // replace with your enum values
+  status: "DRAFT" | "PUBLISHED" | string;
 
   created_at: Date;
   updated_at: Date;
@@ -65,7 +65,7 @@ export async function GET() {
             media_url: await generateReadUrl(media.media_url),
           }))
         ),
-      }))
+      })) 
     );
     return NextResponse.json(
       { message: "all blogs found", blogs: serialize(formattedBlogs) },

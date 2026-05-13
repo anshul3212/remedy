@@ -89,7 +89,7 @@ export default function ChannelTable() {
                     <th className="text-left py-3 w-1/6 px-4">Created By</th>
                     <th className="text-left py-3 w-1/6">Members</th>
                     <th className="text-left py-3 w-1/6">Posts</th>
-                    <th className="text-left py-3 w-1/6">Status</th>
+                    <th className="text-left py-3 w-1/6">Date</th>
                     <th className="text-left py-3 w-1/6">Actions</th>
                   </tr>
                 </thead>
@@ -102,7 +102,7 @@ export default function ChannelTable() {
                     >
                       <td className="py-3 truncate overflow-hidden whitespace-nowrap">{b.name}</td>
                       <td className="px-4">
-                        {b.user_name}
+                        {b.users.users_profile.user_name}
                       </td>
 
 
@@ -111,12 +111,13 @@ export default function ChannelTable() {
                         {b.total_members}
                       </td>
                       <td>{b._count.posts}</td>
+                      <td>{new Date(b.created_at).toLocaleDateString()}</td>
 
-                      <td>Active</td>
+                      {/* <td>Active</td> */}
 
 
                       <td>
-                        <Eye size={12} color="#747474" className="cursor-pointer" onClick={()=>console.log("clicked")}/>
+                        <Eye size={12} color="#747474" className="cursor-pointer" onClick={()=>router.push(`/community/channel-management/${b.id}`)}/>
                       </td>
                     </tr>
                   ))}

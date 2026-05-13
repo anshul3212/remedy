@@ -124,7 +124,7 @@ export default function CommunityTable() {
           <div className="flex flex-wrap gap-2 items-center mb-4 text-xs bg-gray-50 p-2 rounded-lg">
             {/* CATEGORY SELECT */}
             <select
-              className="border border-[#706d6db0] text-[#7d7d7d] px-4 py-2 outline-none rounded-sm text-xs bg-white "
+              className="border border-[#706d6db0] text-[#7d7d7d] px-4 py-2 outline-none cursor-pointer rounded-sm text-xs bg-white "
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -139,7 +139,7 @@ export default function CommunityTable() {
             <button
               onClick={updateCategory}
               disabled={!selectedPosts.length}
-              className="px-4 py-2 bg-purple-600 text-white rounded-sm disabled:opacity-40 hover:bg-purple-700"
+              className="px-4 py-2 bg-purple-600 text-white rounded-sm disabled:opacity-40 hover:bg-purple-700 cursor-pointer"
             >
               Add to Category
             </button>
@@ -148,7 +148,7 @@ export default function CommunityTable() {
             <button
               onClick={removeBulkAction}
               disabled={!selectedPosts.length}
-              className="px-4 py-2 bg-red-500 text-white rounded-sm disabled:opacity-40 hover:bg-red-600"
+              className="px-4 py-2 bg-red-500 text-white cursor-pointer rounded-sm disabled:opacity-40 hover:bg-red-600"
             >
               Remove
             </button>
@@ -156,7 +156,7 @@ export default function CommunityTable() {
             {/* SELECT ALL */}
             <button
               onClick={toggleSelectAll}
-              className="px-4 py-2 rounded-sm border hover:bg-gray-100 border-[#706d6db0] text-[#7d7d7d]"
+              className="px-4 py-2 rounded-sm cursor-pointer border hover:bg-gray-100 border-[#706d6db0] text-[#7d7d7d]"
             >
               {selectedPosts.length === channels?.length
                 ? "Unselect All"

@@ -138,7 +138,6 @@ export function ReportedContentProvider({
           },
         }
       );
-      console.log(res.data)
 
       setReportedPosts(res.data.data.posts || []);
       setReportedComments(res.data.data.comments || []);
@@ -173,7 +172,7 @@ export function useReportedContent() {
   const ctx = useContext(ReportContext);
 
   if (!ctx) {
-    throw new Error("useReport must be used inside ReportedContentProvider");
+    throw new Error("useReportedContent must be used inside ReportedContentProvider");
   }
 
   return ctx;

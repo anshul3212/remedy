@@ -63,7 +63,7 @@ const ChannelData =[
     },
 ]
 
-const page = () => {
+const Page = () => {
 
   const router = useRouter();
 
@@ -73,7 +73,7 @@ const page = () => {
       <h1 className="font-inter font-medium text-[20px] text-[#000000]">
         Community Dashboard
       </h1>
-      <div className="flex items-center gap-6">
+      {/* <div className="flex items-center gap-6">
         {cardData.map((data, idx) => (
           <div
             key={idx}
@@ -95,14 +95,15 @@ const page = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       <div className="flex items-center gap-4">
-        <div className="w-[70%]">
+         {/* <div className="w-[70%]">*/}
+        <div className="w-full">
           <CommunityTable />
         </div>
 
-        <div className="w-[30%] h-full bg-white rounded-xl flex flex-col gap-2">
+        {/* <div className="w-[30%] h-full bg-white rounded-xl flex flex-col gap-2">
           <div className="flex items-center justify-between p-4">
             <h2 className="font-inter font-medium text-[14px] text-black">
               Top Active Channels
@@ -132,7 +133,7 @@ const page = () => {
             
             
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -140,10 +141,10 @@ const page = () => {
         <div className="flex items-center gap-4">
 
        
-            <button className="p-4 flex items-center gap-3 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] cursor-pointer" onClick={()=>router.push("/community/announcements")}>
+            {/* <button className="p-4 flex items-center gap-3 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] cursor-pointer" onClick={()=>router.push("/community/announcements")}>
                 <Megaphone size={20} color="#000" />
                 <span className="text-sm text-black font-inter font-medium">Create Announcements</span>
-            </button>
+            </button> */}
 
             <button onClick={()=>router.push("/community/channel-management/add-channels")} className="p-4 flex items-center gap-3 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] cursor-pointer">
                 <Tv size={20} color="#000" />
@@ -156,4 +157,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

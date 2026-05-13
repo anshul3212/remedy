@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 
 
-export default function CommunityTable() {
+export default function ReportTable() {
  
   const {loading,reportedPosts, reportedComments} = useReportedContent();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -103,7 +103,7 @@ const filteredContent = filterType
      </div>
           <div className="w-full bg-white rounded-xl p-4">
             <h2 className="font-inter font-medium text-[14px] text-black mb-3">
-              List Of Reports
+              List Of Reported Content
             </h2>
 
             {/* ✅ X-axis scroll wrapper */}
@@ -118,7 +118,7 @@ const filteredContent = filterType
                       <th className="text-left py-3 w-1/6 px-4">Type</th>
                       <th className="text-left py-3 w-1/6">Reported By</th>
                       <th className="text-left py-3 w-1/6">Reports</th>
-                      <th className="text-left py-3 w-1/6">Status</th>
+                      {/* <th className="text-left py-3 w-1/6">Status</th> */}
                       <th className="text-left py-3 w-1/6">Action</th>
                     </tr>
                   </thead>
@@ -144,7 +144,7 @@ const filteredContent = filterType
       <td>{item.reportsCount}</td>
 
       {/* STATUS */}
-      <td>{item.status}</td>
+      {/* <td>{item.status}</td> */}
 
       {/* ACTION */}
       <td>
