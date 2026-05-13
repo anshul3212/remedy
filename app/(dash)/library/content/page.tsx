@@ -8,10 +8,8 @@ import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const page = () => {
+const Page = () => {
   const { category, media,fetchBlogs,setMedia } = useBlog();
-
-  
 
   const mediaTypeMap: Record<string, string> = {
   IMAGE: "ARTICLE",
@@ -68,10 +66,10 @@ const payload = {
     {
       media_url: media.media_url,
       media_type: media.media_type,
-      thumbnail_url: "users/thumb.jpg",
+      thumbnail_url: "",
     },
   ],
-};
+}; 
 
 
 
@@ -220,4 +218,4 @@ alert("blog submitted successfully")
   );
 };
 
-export default page;
+export default Page;

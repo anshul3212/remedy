@@ -6,34 +6,6 @@ import JoditEditor from "jodit-react";
 function TextEditor( {content, setContent}:any) {
   const editor = useRef(null);
 
-  // const config = useMemo(
-  //   () => ({
-  //     readonly: false,
-  //     placeholder: "Start typing...",
-  //     height: 400,
-  //     buttons: [
-  //       "bold",
-  //       "italic",
-  //       "underline",
-  //       "|",
-  //       "ul",
-  //       "ol",
-  //       "|",
-  //       "font",
-  //       "paragraph",
-  //       "brush",
-  //       "|",
-  //       "image",
-  //       "link",
-  //       "|",
-  //       "align",
-  //       "undo",
-  //       "redo",
-  //     ],
-  //   }
-  // ),
-  //   []
-  // );
 const config = useMemo(
   () => ({
     readonly: false,
@@ -44,6 +16,11 @@ const config = useMemo(
         : "Start typing...",
 
     height: 400,
+
+    enter: "P",
+    enterBlock: "p",
+
+    toolbarAdaptive: false,
 
     buttons: [
       "bold",

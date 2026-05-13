@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MoreVertical, Trash } from "lucide-react";
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
+import { Trash } from "lucide-react";
 
 export default function CategoryTable() {
   const [openId, setOpenId] = useState<number | null>(null);
@@ -100,7 +99,7 @@ export default function CategoryTable() {
                       <td>
                         <Trash
                           size={12}
-                          color="#747474"
+                          color="#e62828"
                           className="cursor-pointer"
                           onClick={() => deleteCategory(cat.id)}
                         />

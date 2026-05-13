@@ -4,14 +4,39 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, number } from "framer-motion";
 import { Eye, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useReport } from "@/context/reportPostContext";
+import { useReportedContent } from "@/context/reportedContentContext";
 
 export default function CommunityTable() {
   const [openId, setOpenId] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
-  const { reportedPosts, loading } = useReport();
+
+  const {reportedPosts,
+        reportedComments,
+        loading,} = useReportedContent();
+
+        const mergedReports = [
+  ...reportedPosts.map((p) => ({
+    id: p.id,
+    type: "POST",
+    content: p.title,
+    reportedBy: p.post_reports?.[0]?.users?.users_profile?.user_name|| "N/A",
+    reportsCount: p._count.post_reports,
+    status: "Pending",
+  })),
+
+  ...reportedComments.map((c) => ({
+    id: c.id,
+    type: "COMMENT",
+    content: c.comment,
+    reportedBy: c.comment_reports?.[0]?.users?.users_profile?.user_name || "N/A",
+    reportsCount: c._count.comment_reports,
+    status: "Pending",
+  })),
+];
+
+const splitedData = mergedReports.slice(5,15);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,10 +65,10 @@ export default function CommunityTable() {
         <div className="w-full bg-white rounded-xl p-4">
           <div className="flex items-center justify-between">
             <h2 className="font-inter font-medium text-[14px] text-black mb-3">
-              List Of Reported Posts
+              List Of Reported Content
             </h2>
             <button
-              onClick={() => router.push("/community/feed-management")}
+              onClick={() => router.push("/community/reports")}
               className="text-[#747474] text-xs font-inter font-medium cursor-pointer"
             >
               view all
@@ -52,7 +77,7 @@ export default function CommunityTable() {
           {/* ✅ X-axis scroll wrapper */}
           <div className="w-full overflow-x-auto">
             {/* ✅ Y-axis scroll container */}
-            <div className="max-h-78 min-h-78 overflow-y-auto scrollbar-hide">
+            <div className="max-h-110 min-h-110 overflow-y-auto scrollbar-hide">
               <table className="min-w-200 table-fixed w-full">
                 {/* ✅ Sticky Header */}
                 <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
@@ -60,23 +85,23 @@ export default function CommunityTable() {
                     <th className="text-left py-3">Content Preview</th>
                     <th className="text-left py-3 px-4">Type</th>
                     <th className="text-left py-3">Reports</th>
-                    <th className="text-left py-3">Status</th>
+                    {/* <th className="text-left py-3">Status</th> */}
                     <th className="text-left py-3">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody className="">
-                  {reportedPosts?.map((cat, idx) => (
+                  {splitedData?.map((cat, idx) => (
                     <tr
-                      key={cat.id}
+                      key={idx}
                       className="font-inter font-medium text-[12px] text-[#747474] "
                     >
-                      <td className="py-3 truncate ">{cat.title}</td>
-                      <td className="px-4">Posts</td>
+                      <td className="py-3 truncate ">{cat.content}</td>
+                      <td className="px-4">{cat.type}</td>
 
-                      <td>{cat._count.post_reports}</td>
+                      <td>{cat.reportsCount}</td>
 
-                      <td>Pending</td>
+                      {/* <td>Pending</td> */}
 
                       <td>
                         <Eye

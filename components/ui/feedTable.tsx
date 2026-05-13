@@ -51,7 +51,7 @@ export default function FeedTable() {
                 <th className="text-left py-3">Channel</th>
                 <th className="text-left py-3">Date</th>
                 <th className="text-left py-3">Reports</th>
-                <th className="text-left py-3">Status</th>
+                {/* <th className="text-left py-3">Status</th> */}
                 <th className="text-left py-3">Actions</th>
               </tr>
             </thead>
@@ -67,7 +67,7 @@ export default function FeedTable() {
                   <td>{p.channels?.name}</td>
                   <td>{new Date(p.created_at).toLocaleDateString()}</td>
                   <td>{p._count.post_reports}</td>
-                  <td>
+                  {/* <td>
                     <span
                       className={`flex items-center gap-1`}
                       // ${
@@ -78,7 +78,7 @@ export default function FeedTable() {
                     >
                       ● Active
                     </span>
-                  </td>
+                  </td> */}
 
                   {/* ACTION */}
                   {/* <td className="relative">

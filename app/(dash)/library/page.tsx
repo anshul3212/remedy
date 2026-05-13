@@ -5,7 +5,7 @@ import { TextAlignStart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const page = () => {
+const Page = () => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [openFilter, setOpenFilter] = useState(false);
@@ -87,4 +87,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

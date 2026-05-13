@@ -5,7 +5,7 @@ import axios from "axios";
 import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const page = () => {
+const Page = () => {
   const [openModal, setOpenModal] = useState(false);
   const { categories } = useBlog();
   const [name, setName] = useState("");
@@ -32,7 +32,7 @@ const page = () => {
     const token = localStorage.getItem("token");
 
     try {
-      await axios.post(
+       await axios.post(
         `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-category`,
         {
           name: name.replace(" ", "_").toUpperCase(),
@@ -44,6 +44,7 @@ const page = () => {
           },
         },
       );
+      alert("category added");
 
       categories();
 
@@ -73,7 +74,7 @@ const page = () => {
             </span>
           </button>
 
-          {openModal && (
+          {openModal && ( 
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div
                 className="bg-white w-85 p-8 rounded-md shadow-md"
@@ -123,4 +124,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

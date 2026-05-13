@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useUser } from "@/context/userContext";
+
 import {
   Dot,
   Heart,
@@ -9,27 +9,37 @@ import {
   MessageSquare,
   UserCircle2,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useReport } from "@/context/reportPostContext";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+
 import axios from "axios";
 import { usePost } from "@/context/getAllPostContext";
 
 
 
-const page = () => {
+
+const Page = () => { 
   const router = useRouter();
   const { id } = useParams();
+  const searchParams = useSearchParams();
+
+
 
   const {posts,loading,fetchPosts} = usePost();
-
-
+const mediaId = searchParams.get("mediaId");
   const post = posts.find(
     (u) => u.id.trim().toLowerCase() === String(id).trim().toLowerCase(),
   );
+  const selectedMedia = post?.post_media?.find(
+  (media: any) => media.id === mediaId
+);
   if(!post){
-    console.log("post not found")
-    return;
+    return (
+    <div className="flex items-center justify-center w-[80%] h-[80%]">
+      <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
+    </div>
+  );
   }
+
 
  const formattedDate = (dateString?: string) => {
   if (!dateString) return "";
@@ -39,7 +49,7 @@ const page = () => {
   return `${date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric", 
   })} at ${date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -95,16 +105,14 @@ const deletePost = async (postId: string) => {
     fetchPosts();
     router.push("/community/feed-management")
 
-  } catch (error: any) {
+  } catch (error:any) {
     console.log(error.response?.data || error.message);
   }
 };
 
   return (
-    <>{loading?<div className="flex items-center justify-center h-[80%]">
-  <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-</div>:
-    <div className=" font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
+    
+    <div className="font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
       <h1 className="font-inter font-medium text-[20px] text-[#000000]">
         Post Detail
       </h1>
@@ -144,12 +152,12 @@ const deletePost = async (postId: string) => {
               </p>
 
 {post?.post_media && post.post_media.length > 0 ? (
-  <div className="w-full bg-[#b8b5b5] border border-[#d1d1d1] h-50 rounded-md relative">
+  <div className="w-full  h-50 rounded-md relative">
     <Image
-      src={post.post_media[0]?.media_url}
+       src={selectedMedia?.media_url || post.post_media[0]?.media_url}
       alt="post"
       fill
-      className="object-cover absolute"
+      className="object-contain absolute"
     />
   </div>
 ) : (
@@ -159,14 +167,14 @@ const deletePost = async (postId: string) => {
 )}
 
               <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer">
                   <Heart size={18} color="#7d7d7d" />
                   <span className="text-sm font-inter font-bold text-[#7d7d7d]">
                     {post?.total_likes}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer">
                   <MessageSquare size={18} color="#7d7d7d" />
                   <span className="text-sm font-inter font-bold text-[#7d7d7d]">
                     {post?.total_comments}
@@ -175,6 +183,9 @@ const deletePost = async (postId: string) => {
               </div>
             </div>
           </div>
+          {post._count.post_reports>0 &&
+
+         
           <div className="w-full rounded-md shadow-[0px_0px_2.51px_0px_#00000040] flex flex-col gap-4 max-h-50 overflow-y-auto">
           
              <p className="font-inter text-lg font-medium text-[#111111] sticky top-0 z-10 bg-[#f7f7fe] p-4 ">
@@ -228,6 +239,7 @@ const deletePost = async (postId: string) => {
                  </div>
             
           </div>
+           }
         </div> 
 
         <div className="w-[30%] flex flex-col gap-6">
@@ -263,8 +275,8 @@ const deletePost = async (postId: string) => {
         </div>
       </div>
     </div>
-    }</>
+    
   );
 };
 
-export default page;
+export default Page;

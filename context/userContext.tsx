@@ -32,6 +32,7 @@ interface UserContextType {
   removeUser: (id: number) => void;
   updateUser: (user: User) => void;
   totalUsers:number;
+  loading:boolean;
 }
 
 /* ================= CONTEXT ================= */
@@ -44,11 +45,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   
    useEffect(() => {
   const usersData = async () => {
     try {
+      setLoading(true);
       const res = await axios.get("/api/getAllUsers");
       const formattedUsers = res.data.users.map((u: any) => ({
       id: Number(u.id),
@@ -58,10 +61,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
       condition: "NAN", 
       status: u.is_active ? "active" : "inactive",
       joined: new Date(u.created_at).toLocaleDateString(),
+      profile_image: u.users_profile?.profile_image
     }));
 
       setUsers(formattedUsers);
       setTotalUsers(res.data.totalUsers);
+      setLoading(false)
 
     } catch (error: any) {
       console.log(error);
@@ -116,6 +121,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         addUser,
         removeUser,
         updateUser,
+        loading,
       }}
     >
       {children}
