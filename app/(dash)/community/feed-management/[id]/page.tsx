@@ -19,6 +19,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 import { usePost } from "@/context/getAllPostContext";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const router = useRouter();
@@ -47,7 +48,12 @@ const Page = () => {
 
         setPost(res.data.post);
       } catch (error: any) {
-        console.log(error.response?.data || error.message);
+        const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -113,14 +119,30 @@ const Page = () => {
     },
   ];
 
+
+
   const deletePost = async (postId: string) => {
     const token = localStorage.getItem("token");
 
-    const confirmDelete = confirm("Are you sure you want to delete this post?");
+    toast((t) => (
+    <div className="flex flex-col gap-4 py-4">
+      <p className="text-sm font-medium font-inter text-[#747474]">
+        Are you sure you want to delete this post?
+      </p>
 
-    if (!confirmDelete) return;
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323]"
+        >
+          Cancel
+        </button>
 
-    try {
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id);
+
+            try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_DEV_URL}/community/remove-post`,
         {
@@ -134,14 +156,29 @@ const Page = () => {
         },
       );
 
-      alert("post deleted");
+      toast.success("post deleted");
 
       fetchPosts();
 
       router.back();
     } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     }
+          }}
+          className="px-4 py-2 text-sm bg-red-500 text-white border  rounded-sm font-inter text-[12px] font-medium"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ));
+
   };
 
   return (
@@ -450,6 +487,7 @@ const Page = () => {
           </div>
         </div>
       </div>
+      <Toaster/>
     </div>
   );
 };

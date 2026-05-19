@@ -10,6 +10,7 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
@@ -240,11 +241,13 @@ export function BlogProvider({
       setPagination(
         res.data.pagination
       );
-    } catch (error) {
-      console.log(
-        "Blog fetch error:",
-        error
-      );
+    } catch (error:any) {
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -283,11 +286,14 @@ export function BlogProvider({
         setCategory(
           res.data.data.categories
         );
-      } catch (error) {
-        console.log(
-          "Category fetch error:",
-          error
-        );
+      } catch (error:any) {
+        const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
+        
       } finally {
         setLoading(false);
       }

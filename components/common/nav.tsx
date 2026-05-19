@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {  ArrowLeft, BellIcon, ChevronDown, Globe, Mail, MoonIcon, Search, SettingsIcon, TextAlignJustify } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 // import Topmenu from "./topMenu";
 // import axios from "axios";
 
@@ -382,10 +383,16 @@ useEffect(() => {
       "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
 
     /* ================= REDIRECT ================= */
-
+    toast.success("logout successfully")
     router.replace("/login");
-  } catch (error) {
-    console.log("Logout error:", error);
+  } catch (error:any) {
+    const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
   }
 };
   useEffect(() => {
@@ -565,6 +572,7 @@ useEffect(() => {
           </AnimatePresence>
         </div>
       </div>
+      <Toaster/>
     </div>
   );
 };

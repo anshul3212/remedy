@@ -8,6 +8,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
@@ -123,8 +124,13 @@ export function PostProvider({
       );
 
       setPosts(res.data.post || []);
-    } catch (error) {
-      console.log("Post fetch error:", error);
+    } catch (error:any) {
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     } finally {
       setLoading(false);
     }

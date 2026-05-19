@@ -1,3 +1,5 @@
+import { Toaster } from "react-hot-toast";
+
 export default function AuthLayout({
   children,
 }: Readonly<{
@@ -16,6 +18,7 @@ export default function AuthLayout({
       <div className="relative z-10 w-full max-w-5xl mx-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] overflow-hidden h-[70%]">
         {children}
       </div>
+      <Toaster/>
     </div>
   );
 }

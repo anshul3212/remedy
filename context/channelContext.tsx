@@ -8,6 +8,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
@@ -152,11 +153,13 @@ export function ChannelProvider({
       setTotalChannels(
         res.data.pagination.totalChannels
       );
-    } catch (error) {
-      console.log(
-        "Channel fetch error:",
-        error
-      );
+    } catch (error:any) {
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     } finally {
       setLoading(false);
     }

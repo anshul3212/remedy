@@ -188,7 +188,6 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (err) {
-    console.error(err);
 
     return NextResponse.json(
       {

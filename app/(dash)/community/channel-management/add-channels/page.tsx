@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useChannel } from "@/context/channelContext";
 import axios from "axios";
 import { formatNumber } from "@/helper/convertNumber";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function CommunityTable() {
   const [openId, setOpenId] = useState<number | null>(null);
@@ -83,12 +84,17 @@ export default function CommunityTable() {
           category: "STANDARD",
         }
       );
-      alert("removed from category");
+      toast.success("removed from category")
       fetchChannels();
 
       setSelectedPosts([]);
     } catch (error: any) {
-      console.log(error);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     }
   };
 
@@ -107,12 +113,17 @@ export default function CommunityTable() {
           category: selectedCategory,
         }
       );
-      alert("category updated");
+      toast.success("category updated")
       fetchChannels();
 
       setSelectedPosts([]);
     } catch (error: any) {
-      console.log(error);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     }
   };
 
@@ -293,6 +304,8 @@ export default function CommunityTable() {
 
           </div>
       )}
+
+      <Toaster/>
         </div>
    
   

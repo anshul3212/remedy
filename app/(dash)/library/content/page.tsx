@@ -7,6 +7,7 @@ import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const { category, media, fetchBlogs, setMedia } = useBlog();
@@ -68,7 +69,7 @@ const Page = () => {
     const token = localStorage.getItem("token");
 
     if (!media?.media_url?.trim() || !media?.media_type?.trim()) {
-      alert("Please upload media");
+      toast.error("Please upload media")
       return;
     }
 
@@ -76,28 +77,29 @@ const Page = () => {
       (media.media_type === "VIDEO" || media.media_type === "AUDIO") &&
       !media?.thumbnail_url?.trim()
     ) {
-      alert("Please upload thumbnail");
-
+     
+toast.error("Please upload thumbnail")
       return;
     }
 
     if (!selectedCategories.length) {
-      alert("Please select at least one category");
+      toast.error("Please select at least one category")
+      
       return;
     }
 
     if (!title.trim()) {
-      alert("Please enter title");
+      toast.error("Please enter title")
       return;
     }
 
     if (!readTime.trim()) {
-      alert("Please enter read time");
+      toast.error("Please enter read time")
       return;
     }
 
     if (!content.trim()) {
-      alert("Please enter content");
+      toast.error("Please enter content")
       return;
     }
 
@@ -128,9 +130,15 @@ const Page = () => {
         thumbnail_url: "",
         thumbnail_key: "",
       });
-      alert("blog submitted successfully");
-    } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      toast.success("blog submitted successfully");
+    } catch (error:any) {
+      const message =
+      error?.response?.data?.message ||  
+      error?.response?.data?.error ||    
+      error.message ||                   
+      "Something went wrong";
+
+      toast.error(message);
     }
   };
 
@@ -213,6 +221,7 @@ const Page = () => {
       >
         submit
       </button>
+      <Toaster/>
     </div>
   );
 };

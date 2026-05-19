@@ -186,6 +186,7 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const { id } = useParams();
@@ -210,8 +211,13 @@ const Page = () => {
       );
 
       setChannel(res.data.channel);
-    } catch (err) {
-      console.error(err);
+    } catch (error:any) {
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -462,6 +468,7 @@ const Page = () => {
           </div>
         </div>
       </div>
+      <Toaster/>
     </div>
   );
 };

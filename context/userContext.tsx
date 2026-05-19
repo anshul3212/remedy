@@ -10,6 +10,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
@@ -126,7 +127,12 @@ export function UserProvider({
           res.data.pagination.totalUsers
         );
       } catch (error: any) {
-        console.log(error);
+        const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
       } finally {
         setLoading(false);
       }

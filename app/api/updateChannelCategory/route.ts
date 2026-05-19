@@ -85,8 +85,7 @@ export async function PUT(req: NextRequest) {
       }
     );
   } catch (error) {
-    console.error(error);
-
+  
     return NextResponse.json(
       {
         message: "Internal Server Error",

@@ -8,6 +8,7 @@ import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const mediaTypeMap: Record<string, string> = {
   IMAGE: "ARTICLE",
@@ -41,8 +42,13 @@ const Page = () => {
         },
       });
       setBlog(res.data.blog);
-    } catch (error) {
-      console.log(error);
+    } catch (error:any) {
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -106,27 +112,28 @@ const updateBlog = async () => {
   /* ================= VALIDATIONS ================= */
 
 if (!title.trim()) {
-  alert("Please enter title");
+  toast.error("Please enter title")
+  
   return;
 }
 
 if (!readTime.trim()) {
-  alert("Please enter read time");
+  toast.error("Please enter read time")
   return;
 }
 
 if (!content.trim()) {
-  alert("Please enter content");
+  toast.error("Please enter content")
   return;
 }
 
 if (!selectedCategories.length) {
-  alert("Please select at least one category");
+  toast.error("Please select at least one category")
   return;
 }
 
 if (!media?.media_url) {
-  alert("Please upload media");
+  toast.error("Please upload media")
   return;
 }
 
@@ -140,7 +147,7 @@ if (
   isVideoOrAudio &&
   !media?.thumbnail_url
 ) {
-  alert("Please upload thumbnail");
+  toast.error("Please upload thumbnail")
   return;
 }
   try {
@@ -222,7 +229,7 @@ if (
     /* ================= NOTHING CHANGED ================= */
 
     if (Object.keys(payload).length === 1) {
-      alert("No changes found");
+      toast.error("No changes found");
       setLoading(false);
       return;
     }
@@ -239,12 +246,18 @@ if (
     );
 
     await fetchBlogById();
-    alert("Updated successfully");
+    toast.success("Blog Updated successfully");
 await fetchBlogs();
     
     
   } catch (error: any) {
-    console.log(error.response?.data || error);
+    const message =
+      error?.response?.data?.message ||  
+      error?.response?.data?.error ||    
+      error.message ||                   
+      "Something went wrong";
+
+      toast.error(message);
   } finally {
     setLoading(false);
   }
@@ -312,7 +325,7 @@ await fetchBlogs();
                     {category.map((data) => (
                       <label
                         key={data.id}
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer font-inter font-medium text-[14px] text-[#747272]"
                       >
                         <input
                           type="checkbox"
@@ -360,6 +373,7 @@ await fetchBlogs();
           >
             Update
           </button>
+          <Toaster/>
         </div>
       )}
     </>

@@ -3,6 +3,7 @@
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import ReactCrop, {
   Crop,
   PixelCrop,
@@ -547,9 +548,8 @@ useEffect(() => {
     isNewMediaUploaded &&
     isThumbnailMissing
   ) {
-    alert(
-      "Please upload thumbnail"
-    );
+   
+    toast.error("Please upload thumbnail")
 
     return;
   }
@@ -719,15 +719,16 @@ setThumbnailPreviewKey(
       setFile(null);
 
       setCroppedImage(null);
+toast.success("file uploaded successfully")
+      
+    } catch (error:any) {
+      const message =
+      error?.response?.data?.message ||  
+      error?.response?.data?.error ||    
+      error.message ||                   
+      "Something went wrong";
 
-      alert(
-        "file uploaded successfully"
-      );
-    } catch (error) {
-      console.log(
-        "Upload error:",
-        error
-      );
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -865,7 +866,7 @@ setThumbnailPreviewKey(
           ];
 
   if (!allowedTypes.includes(f.type)) {
-    alert("File type not supported");
+    toast.error("File type not supported")
 
     e.target.value = "";
 
@@ -881,9 +882,8 @@ setThumbnailPreviewKey(
                   f.size >
                   MAX_SIZE
                 ) {
-                  alert(
-                    "File size should be less than 40MB"
-                  );
+                  toast.error("File size should be less than 40MB")
+                  
                   return;
                 }
 
@@ -1018,7 +1018,7 @@ setThumbnailPreviewKey(
   ];
 
   if (!allowedTypes.includes(f.type)) {
-    alert("Thumbnail file type not supported");
+    toast.error("Thumbnail file type not supported")
 
     e.target.value = "";
 
@@ -1034,9 +1034,7 @@ setThumbnailPreviewKey(
                   f.size >
                   MAX_SIZE
                 ) {
-                  alert(
-                    "Thumbnail should be less than 5MB"
-                  );
+                  toast.error("Thumbnail should be less than 5MB")
                   return;
                 }
 
@@ -1188,6 +1186,7 @@ setThumbnailPreviewKey(
             </div>
           </div>
         )}
+        <Toaster/>
     </div>
   );
 }

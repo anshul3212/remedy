@@ -6,6 +6,7 @@ import { useBlog } from "@/context/blogContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { formatNumber } from "@/helper/convertNumber";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function LibrayTable({
   filterType,
@@ -29,38 +30,69 @@ export default function LibrayTable({
   useEffect(() => {
     fetchBlogs();
   }, []);
-
+ 
   const filteredBlogs = filterType
     ? blogs.filter((b) => b.type === filterType)
     : blogs;
 
 
+
   const deleteBlog = async (blogId: string) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    const confirmDelete = confirm("Are you sure you want to delete this blog?");
-    if (!confirmDelete) return;
+  toast((t) => (
+    <div className="flex flex-col gap-4 py-4">
+      <p className="text-sm font-medium font-inter text-[#747474]">
+        Are you sure you want to delete this blog?
+      </p>
 
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/remove-blog`,
-        {
-          blog_id: blogId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }, 
-        },
-      );
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323]"
+        >
+          Cancel
+        </button>
 
-      fetchBlogs();
-    } catch (error: any) {
-      console.log(error.response?.data || error.message);
-    }
-  };
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id);
 
+            try {
+              await axios.post(
+                `${process.env.NEXT_PUBLIC_DEV_URL}/blog/remove-blog`,
+                {
+                  blog_id: blogId,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+
+              toast.success("Blog deleted successfully");
+
+              fetchBlogs();
+            } catch (error: any) {
+              const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
+            }
+          }}
+          className="px-4 py-2 text-sm bg-red-500 text-white border  rounded-sm font-inter text-[12px] font-medium"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ));
+};
   const startItem =
     (page - 1) * limit + 1;
 
@@ -189,6 +221,7 @@ export default function LibrayTable({
           </div>
         </div>
       )}
+      <Toaster/>
     </>
   );
 }

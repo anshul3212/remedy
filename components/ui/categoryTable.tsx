@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { Trash } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function CategoryTable() {
   const [openId, setOpenId] = useState<number | null>(null);
@@ -30,11 +31,25 @@ export default function CategoryTable() {
 
   const deleteCategory = async (catId: number) => {
     const token = localStorage.getItem("token");
+toast((t) => (
+    <div className="flex flex-col gap-4 py-4">
+      <p className="text-sm font-medium font-inter text-[#747474]">
+        Are you sure you want to delete this category?
+      </p>
 
-    const confirmDelete = confirm("Are you sure you want to delete this blog?");
-    if (!confirmDelete) return;
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323]"
+        >
+          Cancel
+        </button>
 
-    try {
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id);
+
+            try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_DEV_URL}/blog/remove-category`,
         {
@@ -48,11 +63,26 @@ export default function CategoryTable() {
         },
       );
 
-      alert("category deleted");
+      toast.success("category deleted");
       categories();
     } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
     }
+          }}
+          className="px-4 py-2 text-sm bg-red-500 text-white border  rounded-sm font-inter text-[12px] font-medium"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ));
+
   };
 
   return (
@@ -112,6 +142,8 @@ export default function CategoryTable() {
           </div>
         </div>
       )}
+
+      <Toaster/>
     </>
   );
 }

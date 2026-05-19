@@ -178,7 +178,6 @@ export async function GET() {
       }
     );
   } catch (err) {
-    console.error(err);
 
     return NextResponse.json(
       {
