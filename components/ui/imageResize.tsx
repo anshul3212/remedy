@@ -992,7 +992,7 @@ toast.success("file uploaded successfully")
         {(mediaType === "Video" ||
           mediaType ===
             "Audio") && (
-          <div className="flex items-center flex-col  gap-3  border-t p-2">
+          <div className="flex items-center flex-col  gap-3  border-t border-[#d1cfcf] p-2">
             <input
               ref={thumbnailInputRef}
               type="file"
@@ -1072,7 +1072,7 @@ toast.success("file uploaded successfully")
                 src={
                   thumbnailPreview
                 }
-                className="w-full h-40 object-contain rounded border"
+                className="w-full h-40 object-contain rounded "
               />
             )}
           </div>
