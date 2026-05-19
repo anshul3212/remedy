@@ -62,15 +62,15 @@ export default function CategoryTable() {
           <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="w-full bg-white rounded-xl p-4">
+        <div className="w-full bg-[#ffffff] rounded-xl p-4 h-[90%]">
           <h2 className="font-inter font-medium text-[14px] text-black mb-3">
             List Of All Categories
           </h2>
 
           {/* ✅ X-axis scroll wrapper */}
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto h-full">
             {/* ✅ Y-axis scroll container */}
-            <div className="max-h-120 min-h-115 overflow-y-auto scrollbar-hide">
+            <div className="h-[90%]  overflow-y-auto scrollbar-hide">
               <table className="min-w-200 w-full">
                 {/* ✅ Sticky Header */}
                 <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">

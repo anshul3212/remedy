@@ -347,22 +347,6 @@ const DashTop = ({
     };
   }, [showNotifications]);
 
-  //   useEffect(() => {
-  //   async function fetchUser() {
-  //     try {
-  //       const res = await axios.get("/api/user", { withCredentials: true });
-  //       setName(res.data.user.name);
-  //     } catch (error) {
-  //       alert("please login")
-  //       router.push("/login")
-  //       console.log("Not logged in ", error);
-  //       setName("");
-  //     }
-  //   }
-
-  //   fetchUser();
-  // }, []);
-
   const [userName, setUserName] = useState("");
 const [userImage, setUserImage] = useState("");
 
@@ -383,10 +367,27 @@ useEffect(() => {
 }, []);
 
   const handleLogout = async () => {
-   localStorage.removeItem("token")
-   alert("logout successfully");
-   router.replace("/login")
-  };
+  try {
+    /* ================= REMOVE STORAGE ================= */
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user_name");
+
+    localStorage.removeItem("user_image");
+
+    /* ================= REMOVE COOKIE ================= */
+
+    document.cookie =
+      "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+
+    /* ================= REDIRECT ================= */
+
+    router.replace("/login");
+  } catch (error) {
+    console.log("Logout error:", error);
+  }
+};
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {

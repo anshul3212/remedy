@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import axios from "axios";
@@ -19,62 +21,120 @@ export interface User {
   condition?: string;
   status?: "active" | "inactive";
   joined?: string;
+  profile_image?: string;
 }
-
-
 
 interface UserContextType {
   users: User[];
+
   selectedUser: User | null;
+
   selectUser: (id: number) => void;
+
   clearSelected: () => void;
+
   addUser: (user: User) => void;
+
   removeUser: (id: number) => void;
+
   updateUser: (user: User) => void;
-  totalUsers:number;
-  loading:boolean;
+
+  totalUsers: number;
+
+  loading: boolean;
+
+  /* ✅ PAGINATION */
+  page: number;
+  limit: number;
+  totalPages: number;
+
+  setPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 /* ================= CONTEXT ================= */
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>(
+  undefined
+);
 
 /* ================= PROVIDER ================= */
 
-export function UserProvider({ children }: { children: ReactNode }) {
+export function UserProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [selectedUser, setSelectedUser] =
+    useState<User | null>(null);
+
   const [totalUsers, setTotalUsers] = useState(0);
+
   const [loading, setLoading] = useState(false);
 
-  
-   useEffect(() => {
-  const usersData = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get("/api/getAllUsers");
-      const formattedUsers = res.data.users.map((u: any) => ({
-      id: Number(u.id),
-      uuid: u.uuid,
-      email: u.email_id,
-      name: `${u.users_profile?.first_name} ${u.users_profile?.last_name}`,
-      condition: "NAN", 
-      status: u.is_active ? "active" : "inactive",
-      joined: new Date(u.created_at).toLocaleDateString(),
-      profile_image: u.users_profile?.profile_image
-    }));
+  /* ================= PAGINATION ================= */
 
-      setUsers(formattedUsers);
-      setTotalUsers(res.data.totalUsers);
-      setLoading(false)
+  const [page, setPage] = useState(1);
 
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
+  const limit = 20;
 
-  usersData();
-}, []);
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  /* ================= FETCH USERS ================= */
+
+  useEffect(() => {
+    const usersData = async () => {
+      try {
+        setLoading(true);
+
+        const res = await axios.get(
+          `/api/getAllUsers?page=${page}&limit=${limit}`
+        );
+
+        const formattedUsers = res.data.users.map(
+          (u: any) => ({
+            id: Number(u.id),
+
+            uuid: u.uuid,
+
+            email: u.email_id,
+
+            name: `${u.users_profile?.first_name || ""} ${
+              u.users_profile?.last_name || ""
+            }`,
+
+            condition: "NAN",
+
+            status: u.is_active
+              ? "active"
+              : "inactive",
+
+            joined: new Date(
+              u.created_at
+            ).toLocaleDateString(),
+
+            profile_image:
+              u.users_profile?.profile_image,
+          })
+        );
+
+        setUsers(formattedUsers);
+
+        /* ✅ FIX */
+        setTotalUsers(
+          res.data.pagination.totalUsers
+        );
+      } catch (error: any) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    usersData();
+  }, [page]);
+
   /* ---------- CRUD ---------- */
 
   const addUser = (user: User) => {
@@ -82,31 +142,42 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const removeUser = (id: number) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+    setUsers((prev) =>
+      prev.filter((u) => u.id !== id)
+    );
 
-    // if deleted user is selected → clear
-    setSelectedUser((prev) => (prev?.id === id ? null : prev));
+    setSelectedUser((prev) =>
+      prev?.id === id ? null : prev
+    );
   };
 
   const updateUser = (updatedUser: User) => {
     setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+      prev.map((u) =>
+        u.id === updatedUser.id
+          ? updatedUser
+          : u
+      )
     );
 
-    // keep selected user in sync
     setSelectedUser((prev) =>
-      prev?.id === updatedUser.id ? updatedUser : prev
+      prev?.id === updatedUser.id
+        ? updatedUser
+        : prev
     );
   };
 
   /* ---------- SELECT ---------- */
 
   const selectUser = (id: number) => {
-    const found = users.find((u) => u.id === id) || null;
+    const found =
+      users.find((u) => u.id === id) || null;
+
     setSelectedUser(found);
   };
 
-  const clearSelected = () => setSelectedUser(null);
+  const clearSelected = () =>
+    setSelectedUser(null);
 
   /* ---------- PROVIDER ---------- */
 
@@ -114,14 +185,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider
       value={{
         users,
+
         totalUsers,
-        selectedUser,
-        selectUser,
-        clearSelected,
-        addUser,
-        removeUser,
-        updateUser,
+
         loading,
+
+        selectedUser,
+
+        selectUser,
+
+        clearSelected,
+
+        addUser,
+
+        removeUser,
+
+        updateUser,
+
+        /* ✅ PAGINATION */
+        page,
+        limit,
+        totalPages,
+        setPage,
       }}
     >
       {children}
@@ -133,8 +218,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 export function useUser() {
   const ctx = useContext(UserContext);
+
   if (!ctx) {
-    throw new Error("useUser must be used inside UserProvider");
+    throw new Error(
+      "useUser must be used inside UserProvider"
+    );
   }
+
   return ctx;
 }

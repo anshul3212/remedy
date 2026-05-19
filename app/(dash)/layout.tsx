@@ -11,6 +11,7 @@ import { ReportedContentProvider } from "@/context/reportedContentContext";
 import { PostProvider } from "@/context/getAllPostContext";
 
 
+
 export default function DashLayout({
   children,
 }: {
@@ -20,6 +21,7 @@ export default function DashLayout({
   const [openSidebar, setOpenSidebar] = useState(false);
 
   return (
+    
     <PostProvider>
 <ReportedContentProvider>
 <ChannelProvider>
@@ -50,5 +52,6 @@ export default function DashLayout({
 </ChannelProvider>
 </ReportedContentProvider>
 </PostProvider>
+
   );
 }

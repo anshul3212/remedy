@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+
+import {  useState } from "react";
 import Input from "@/components/ui/input";
-import Button from "@/components/ui/button";
+
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 const LoginLeft = () => {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
-
+ 
   const [checked, setChecked] = useState(false);
 
 
@@ -26,27 +26,67 @@ const LoginLeft = () => {
     email_id: email,
     password: password,
   };
-  const handleLogin = async () => {
-    try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_AUTH_URL}/sign-in-admin`,
-        payload,
+  
+
+const handleLogin = async () => {
+  try {
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_DEV_AUTH_URL}/sign-in-admin`,
+      payload
+    );
+
+
+    const token = res.data.data.auth_key;
+
+    /* ================= COOKIE EXPIRY ================= */
+
+    if (checked) {
+      // 30 days
+      const expiryDate = new Date();
+
+      expiryDate.setDate(
+        expiryDate.getDate() + 30
       );
 
-      console.log(res.data)
-       
-      localStorage.setItem("token", res.data.data.auth_key);
-      localStorage.setItem("user_name",res.data.data.full_name);
-      localStorage.setItem("user_image",res.data.data.profile_image);
-
-      setEmail("");
-      setPassword("");
-      router.push("/users");
-    } catch (error) {
-      alert("invalid email or password")
-      console.log(error);
+      document.cookie = `token=${token}; path=/; expires=${expiryDate.toUTCString()}`;
+    } else {
+      // Session cookie
+      document.cookie = `token=${token}; path=/`;
     }
-  };
+
+    /* ================= LOCAL STORAGE ================= */
+
+    localStorage.setItem(
+      "token",
+      token
+    );
+
+    localStorage.setItem(
+      "user_name",
+      res.data.data.full_name
+    );
+
+    localStorage.setItem(
+      "user_image",
+      res.data.data.profile_image
+    );
+
+    /* ================= RESET ================= */
+
+    setEmail("");
+
+    setPassword("");
+
+    /* ================= REDIRECT ================= */
+
+    router.push("/users");
+  } catch (error) {
+    alert("invalid email or password");
+
+    console.log(error);
+  }
+};
+
 
   return (
     <aside className=" flex justify-between h-full items-center relative overflow-hidden gap-4 rounded-xl ">
@@ -84,9 +124,6 @@ const LoginLeft = () => {
           <h3 className="font-medium  text-[#000000] text-5xl">
             Sign In
           </h3>
-          {/* <span className=" font-normal text-sm text-[#000000bf]">
-            Sign in to heyRMDY admin pannel
-          </span> */}
         </div>
 
         <form
@@ -150,16 +187,7 @@ const LoginLeft = () => {
             </label>
           </div>
 
-          {/* <Button
-  text={"Sign In"}
-  onClick={handleLogin}
-  disabled={isDisabled}
-  className={`transition-all duration-300 ${
-    isDisabled
-      ? "opacity-50 cursor-not-allowed"
-      : "opacity-100 cursor-pointer"
-  }`}
-/> */}
+          
 <button
 type="submit"
         className={`bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] w-full text-[#ffffff] h-10 rounded-sm fontr-inter  font-normal text-lg cursor-pointer transition-all duration-300 ${
@@ -173,15 +201,7 @@ type="submit"
       </button>
         </form>
 
-        {/* <div className="mt-4 pt-2 text-center">
-          <div className="signin-other-title">
-            <h5 className="font-size-14 mb-3 text-muted fw-medium">
-              - Sign in with -
-            </h5>
-          </div>
-
-          
-        </div> */}
+       
       </div>
       </div>
     </aside>

@@ -30,6 +30,7 @@ const Page = () => {
 
   const createCategory = async () => {
     const token = localStorage.getItem("token");
+    
 
     try {
        await axios.post(
@@ -117,9 +118,9 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="w-full h-full bg-white rounded-xl p-4 flex flex-col justify-between">
+      
         <CategoryTable />
-      </div>
+    
     </div>
   );
 };

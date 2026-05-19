@@ -67,61 +67,10 @@ export default function FeedTable() {
                   <td>{p.channels?.name}</td>
                   <td>{new Date(p.created_at).toLocaleDateString()}</td>
                   <td>{p._count.post_reports}</td>
-                  {/* <td>
-                    <span
-                      className={`flex items-center gap-1`}
-                      // ${
-                      //   p.status === "active"
-                      //     ? "text-[#34A853]"
-                      //     : "text-[#B8B8B8]"
-                      // }
-                    >
-                      ● Active
-                    </span>
-                  </td> */}
-
-                  {/* ACTION */}
-                  {/* <td className="relative">
-                    <button
-                      onClick={() =>
-                        setOpenId(openId === Number(p.id) ? null : Number(p.id))
-                      }
-                    >
-                      <MoreVertical size={16} className="cursor-pointer" />
-                    </button>
-
-                    <AnimatePresence>
-                      {openId === Number(p.id) && (
-                        <motion.div
-                          ref={dropdownRef}
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                          className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-lg p-2 z-50"
-                        >
-                          {["View", "Block"].map((action) => (
-                            <button
-                              key={action}
-                              onClick={() => {
-                                if (action === "View") {
-                                  router.push(`/community/feed-management/${p.id}`);
-                                }
-                                if (action === "Block") {
-                                  console.log("blocked");
-                                }
-                              }}
-                              className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded ${action === "Block" ? "text-red-600" : "text-[#4b4949]"} cursor-pointer`}
-                            >
-                              {action}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </td> */}
-
                   <td>
-                    <Eye size={12} color="#747474" className="cursor-pointer" onClick={()=>router.push(`/community/feed-management/${p.id}`)}/>
+                    <Eye size={12} color="#747474" className="cursor-pointer" 
+                      onClick={()=>router.push(`/community/feed-management/${p.id}`)}
+                    />
                   </td>
                 </tr>
               ))}

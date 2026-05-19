@@ -140,11 +140,7 @@ const Page = () => {
         <span className="font-inter font-medium text-[14px] text-black">Quick Actions</span>
         <div className="flex items-center gap-4">
 
-       
-            {/* <button className="p-4 flex items-center gap-3 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] cursor-pointer" onClick={()=>router.push("/community/announcements")}>
-                <Megaphone size={20} color="#000" />
-                <span className="text-sm text-black font-inter font-medium">Create Announcements</span>
-            </button> */}
+  
 
             <button onClick={()=>router.push("/community/channel-management/add-channels")} className="p-4 flex items-center gap-3 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] cursor-pointer">
                 <Tv size={20} color="#000" />
