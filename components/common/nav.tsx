@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {  ArrowLeft, BellIcon, ChevronDown, Globe, Mail, MoonIcon, Search, SettingsIcon, TextAlignJustify } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 // import Topmenu from "./topMenu";
 // import axios from "axios";
 
@@ -347,22 +348,6 @@ const DashTop = ({
     };
   }, [showNotifications]);
 
-  //   useEffect(() => {
-  //   async function fetchUser() {
-  //     try {
-  //       const res = await axios.get("/api/user", { withCredentials: true });
-  //       setName(res.data.user.name);
-  //     } catch (error) {
-  //       alert("please login")
-  //       router.push("/login")
-  //       console.log("Not logged in ", error);
-  //       setName("");
-  //     }
-  //   }
-
-  //   fetchUser();
-  // }, []);
-
   const [userName, setUserName] = useState("");
 const [userImage, setUserImage] = useState("");
 
@@ -383,10 +368,33 @@ useEffect(() => {
 }, []);
 
   const handleLogout = async () => {
-   localStorage.removeItem("token")
-   alert("logout successfully");
-   router.replace("/login")
-  };
+  try {
+    /* ================= REMOVE STORAGE ================= */
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user_name");
+
+    localStorage.removeItem("user_image");
+
+    /* ================= REMOVE COOKIE ================= */
+
+    document.cookie =
+      "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+
+    /* ================= REDIRECT ================= */
+    toast.success("logout successfully")
+    router.replace("/login");
+  } catch (error:any) {
+    const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
+  }
+};
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -564,6 +572,7 @@ useEffect(() => {
           </AnimatePresence>
         </div>
       </div>
+      <Toaster/>
     </div>
   );
 };

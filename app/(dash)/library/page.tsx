@@ -80,9 +80,8 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="w-full h-full bg-white rounded-xl p-4 flex flex-col justify-between">
+      
         <LibrayTable filterType={filterType} />
-      </div>
     </div>
   );
 };

@@ -3,13 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import { useChannel } from "@/context/channelContext";
 import axios from "axios";
+import { formatNumber } from "@/helper/convertNumber";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function CommunityTable() {
   const [openId, setOpenId] = useState<number | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const { channels, loading, fetchChannels } = useChannel();
+  const { channels, loading,
+      page,
+          setPage,
+          limit,
+          totalPages,
+          totalChannels,
+          fetchChannels,
+     } = useChannel();
 
   const categories = ["popular", "recommended"];
   const [selectedCategory, setSelectedCategory] = useState("popular");
@@ -75,12 +84,17 @@ export default function CommunityTable() {
           category: "STANDARD",
         }
       );
-      alert("removed from category");
+      toast.success("removed from category")
       fetchChannels();
 
       setSelectedPosts([]);
     } catch (error: any) {
-      console.log(error);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     }
   };
 
@@ -92,29 +106,41 @@ export default function CommunityTable() {
 
       const channelIds = selectedChannels.map((c) => c.id);
 
-      const res = await axios.put(
+       await axios.put(
         "/api/updateChannelCategory",
         {
           channelIds,
           category: selectedCategory,
         }
       );
-      alert("category updated");
+      toast.success("category updated")
       fetchChannels();
 
       setSelectedPosts([]);
     } catch (error: any) {
-      console.log(error);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
     }
   };
 
+
+  /* ================= PAGINATION ================= */
+
+  const startItem =
+    (page - 1) * limit + 1;
+
+  const endItem = Math.min(
+    page * limit,
+    totalChannels
+  );
+
   return (
-    <>
-      {loading ? (
-        <div className="flex items-center justify-center w-full h-full">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-        </div>
-      ) : (
+   
+      
         <div className=" font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
           <h1 className="font-inter font-medium text-[20px] text-[#000000]">
             Channel Details
@@ -165,33 +191,39 @@ export default function CommunityTable() {
           </div>
 
           {/* TABLE */}
+          {loading ? (
+        <div className="flex items-center justify-center w-full h-full">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
+        </div>
+      ) : (
 
-          <div className="w-full bg-white rounded-xl p-4">
+          <div className="w-full bg-white rounded-xl p-4 h-[80%]">
             <h2 className="font-inter font-medium text-[14px] text-black mb-3">
               List Of All Channels
             </h2>
 
             {/* ✅ X-axis scroll wrapper */}
-            <div className="w-full overflow-x-auto">
+            <div className="w-full h-full overflow-x-auto">
               {/* ✅ Y-axis scroll container */}
-              <div className="max-h-98 min-h-98 overflow-y-auto scrollbar-hide">
+              <div className="h-[90%] overflow-y-auto scrollbar-hide">
                 <table className="table-fixed w-full">
                   {/* ✅ Sticky Header */}
                   <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
                     <tr>
-                      <th className="py-3 text-left w-1/6">Select</th>
-                      <th className="text-left py-3 w-1/6">Channel</th>
-                      <th className="text-left py-3 w-1/6 px-4">Created By</th>
-                      <th className="text-left py-3 w-1/6">Members</th>
-                      <th className="text-left py-3 w-1/6">Posts</th>
-                      <th className="text-left py-3 w-1/6">Status</th>
+                      <th className="py-3 text-left w-1/7">Select</th>
+                      <th className="text-left py-3 w-1/7">S. No.</th>
+                      <th className="text-left py-3 w-1/7">Channel</th>
+                      <th className="text-left py-3 w-1/7 px-4">Created By</th>
+                      <th className="text-left py-3 w-1/7">Members</th>
+                      <th className="text-left py-3 w-1/7">Posts</th>
+                      <th className="text-left py-3 w-1/7">Status</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {channels.map((b) => (
+                    {channels.map((b,idx) => (
                       <tr
-                        key={b.id}
+                        key={idx}
                         className="font-inter font-medium text-[12px] text-[#747474]"
                       >
                         <td className="py-3">
@@ -201,10 +233,14 @@ export default function CommunityTable() {
                             onChange={() => toggleSelect(Number(b.id))}
                           />
                         </td>
+
+                        <td>
+                    {(page - 1) * limit + idx + 1}
+                  </td>
                         <td className="py-3 truncate overflow-hidden whitespace-nowrap">
                           {b.name}
                         </td>
-                        <td className="px-4">{b.user_name}</td>
+                        <td className="px-4">{b.users.users_profile.user_name}</td>
 
                         <td>{b.total_members}</td>
                         <td>{b._count.posts}</td>
@@ -215,11 +251,63 @@ export default function CommunityTable() {
                   </tbody>
                 </table>
               </div>
+              {/* ================= PAGINATION ================= */}
+
+        <div className="flex items-center justify-between w-full bg-[#F8F8F8] py-2">
+
+          <p className="flex text-sm font-inter font-normal text-[#161616cb]">
+            Showing {formatNumber(startItem)} to {formatNumber(endItem)} out of{" "}
+            {formatNumber(totalChannels)}
+          </p>
+
+          <div className="flex items-center gap-6 text-sm font-inter font-medium">
+
+            {/* PREV */}
+            <span
+              onClick={() => {
+                if (page > 1) {
+                  setPage((prev) => prev - 1);
+                }
+              }}
+              className={`cursor-pointer ${
+                page === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#e21f11cb]"
+              }`}
+            >
+              Prev
+            </span>
+
+            {/* PAGE */}
+            <span className="text-[#333232]">
+              {formatNumber(page)} / {formatNumber(totalPages)}
+            </span>
+
+            {/* NEXT */}
+            <span
+              onClick={() => {
+                if (page < totalPages) {
+                  setPage((prev) => prev + 1);
+                }
+              }}
+              className={`cursor-pointer ${
+                page === totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#4159e6]"
+              }`}
+            >
+              Next
+            </span>
+          </div>
+        </div>
             </div>
 
           </div>
-        </div>
       )}
-    </>
+
+      <Toaster/>
+        </div>
+   
+  
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { Trash } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function CategoryTable() {
   const [openId, setOpenId] = useState<number | null>(null);
@@ -30,11 +31,25 @@ export default function CategoryTable() {
 
   const deleteCategory = async (catId: number) => {
     const token = localStorage.getItem("token");
+toast((t) => (
+    <div className="flex flex-col gap-4 py-4">
+      <p className="text-sm font-medium font-inter text-[#747474]">
+        Are you sure you want to delete this category?
+      </p>
 
-    const confirmDelete = confirm("Are you sure you want to delete this blog?");
-    if (!confirmDelete) return;
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323]"
+        >
+          Cancel
+        </button>
 
-    try {
+        <button
+          onClick={async () => {
+            toast.dismiss(t.id);
+
+            try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_DEV_URL}/blog/remove-category`,
         {
@@ -48,11 +63,26 @@ export default function CategoryTable() {
         },
       );
 
-      alert("category deleted");
+      toast.success("category deleted");
       categories();
     } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
     }
+          }}
+          className="px-4 py-2 text-sm bg-red-500 text-white border  rounded-sm font-inter text-[12px] font-medium"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ));
+
   };
 
   return (
@@ -62,15 +92,15 @@ export default function CategoryTable() {
           <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="w-full bg-white rounded-xl p-4">
+        <div className="w-full bg-[#ffffff] rounded-xl p-4 h-[90%]">
           <h2 className="font-inter font-medium text-[14px] text-black mb-3">
             List Of All Categories
           </h2>
 
           {/* ✅ X-axis scroll wrapper */}
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto h-full">
             {/* ✅ Y-axis scroll container */}
-            <div className="max-h-120 min-h-115 overflow-y-auto scrollbar-hide">
+            <div className="h-[90%]  overflow-y-auto scrollbar-hide">
               <table className="min-w-200 w-full">
                 {/* ✅ Sticky Header */}
                 <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
@@ -112,6 +142,8 @@ export default function CategoryTable() {
           </div>
         </div>
       )}
+
+      <Toaster/>
     </>
   );
 }

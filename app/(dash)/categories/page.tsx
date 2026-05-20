@@ -4,6 +4,7 @@ import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -30,6 +31,7 @@ const Page = () => {
 
   const createCategory = async () => {
     const token = localStorage.getItem("token");
+    
 
     try {
        await axios.post(
@@ -44,12 +46,18 @@ const Page = () => {
           },
         },
       );
-      alert("category added");
+      toast.success("category added")
 
       categories();
 
     } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+
+              toast.error(message);
     }
   };
 
@@ -117,9 +125,11 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="w-full h-full bg-white rounded-xl p-4 flex flex-col justify-between">
+      
         <CategoryTable />
-      </div>
+
+        <Toaster/>
+    
     </div>
   );
 };

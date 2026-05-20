@@ -19,9 +19,9 @@ const Page = () => {
                 <span className="text-sm text-black font-inter font-medium">Categories Channels</span>
             </button>
             </div>
-      <div className="">
+      
         <ChannelTable/>
-      </div>
+
         </div>
     );
 }

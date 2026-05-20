@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, number } from "framer-motion";
-import { Eye, MoreVertical } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useReportedContent } from "@/context/reportedContentContext";
 
@@ -14,14 +13,13 @@ export default function CommunityTable() {
 
   const {reportedPosts,
         reportedComments,
-        loading,} = useReportedContent();
+        loading,} = useReportedContent(); 
 
         const mergedReports = [
   ...reportedPosts.map((p) => ({
     id: p.id,
     type: "POST",
     content: p.title,
-    reportedBy: p.post_reports?.[0]?.users?.users_profile?.user_name|| "N/A",
     reportsCount: p._count.post_reports,
     status: "Pending",
   })),

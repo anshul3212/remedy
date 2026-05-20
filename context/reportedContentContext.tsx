@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import axios from "axios";
@@ -8,102 +10,82 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
-/* ================= TYPES ================= */
+/* ================= REPORT ITEM ================= */
 
-export interface ReportUserProfile {
-  user_name: string;
-  first_name: string;
-  last_name: string;
-  profile_image: string | null;
-}
-
-export interface ReportUser {
+export interface ReportItem {
   id: string;
-  email_id: string;
-  users_profile: ReportUserProfile | null;
-}
 
-/* ================= POSTS ================= */
+  type: "POST" | "COMMENT";
 
-export interface ReportedPost {
-  id: string;
-  title: string;
-  description: string;
+  content: string;
+
   created_at: string;
 
-  users: ReportUser;
+  post_id: string;
 
-  channels: {
-    id: string;
-    name: string;
-    description: string;
-  } | null;
-
-  post_reports: {
-    id: string;
-    reason: string;
-    created_at: string;
-    users: ReportUser;
-  }[];
-
-  _count: {
-    post_reports: number;
-  };
+  reportsCount: number;
 }
 
-/* ================= COMMENTS ================= */
+/* ================= PAGINATION ================= */
 
-export interface ReportedComment {
-  id: string;
-  comment: string;
-  created_at: string;
+export interface Pagination {
+  currentPage: number;
 
-  users: ReportUser;
+  limit: number;
 
-  posts: {
-    id: string;
-    title: string;
-    description: string;
-  };
+  total: number;
 
-  comment_reports: {
-    id: string;
-    reason: string;
-    created_at: string;
-    users: ReportUser;
-  }[];
+  totalPages: number;
 
-  _count: {
-    comment_reports: number;
-  };
+  hasNextPage: boolean;
+
+  hasPrevPage: boolean;
 }
 
 /* ================= API RESPONSE ================= */
 
 export interface ReportResponse {
   message: string;
-  data: {
-    posts: ReportedPost[];
-    comments: ReportedComment[];
-  };
+
+  data: ReportItem[];
+
+  pagination: Pagination;
 }
 
 /* ================= CONTEXT TYPE ================= */
 
 interface ReportContextType {
-  reportedPosts: ReportedPost[];
-  reportedComments: ReportedComment[];
+  reports: ReportItem[];
 
   loading: boolean;
+
+  reportedPosts: ReportItem[];
+
+  reportedComments: ReportItem[];
+
   fetchReportedContent: () => Promise<void>;
+
+  /* ================= PAGINATION ================= */
+
+  page: number;
+
+  setPage: React.Dispatch<
+    React.SetStateAction<number>
+  >;
+
+  limit: number;
+
+  pagination: Pagination | null;
 }
 
 /* ================= CONTEXT ================= */
 
-const ReportContext = createContext<ReportContextType | undefined>(
-  undefined
-);
+const ReportContext =
+  createContext<
+    ReportContextType | undefined
+  >(undefined);
 
 /* ================= PROVIDER ================= */
 
@@ -112,53 +94,110 @@ export function ReportedContentProvider({
 }: {
   children: ReactNode;
 }) {
-  const [reportedPosts, setReportedPosts] = useState<
-    ReportedPost[]
-  >([]);
-  const [reportedComments, setReportedComments] = useState<
-    ReportedComment[]
-  >([]);
+  const [reports, setReports] =
+    useState<ReportItem[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
+
+  /* ================= PAGINATION ================= */
+
+  const [page, setPage] =
+    useState(1);
+
+  const limit = 20;
+
+  const [pagination, setPagination] =
+    useState<Pagination | null>(
+      null
+    );
+
+  /* ================= FILTERED REPORTS ================= */
+
+  const reportedPosts =
+    reports.filter(
+      (item) =>
+        item.type === "POST"
+    );
+
+  const reportedComments =
+    reports.filter(
+      (item) =>
+        item.type === "COMMENT"
+    );
 
   /* ================= FETCH ================= */
 
-  const fetchReportedContent = async () => {
-    const token = localStorage.getItem("token");
+  const fetchReportedContent =
+    async () => {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
 
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const res = await axios.get<ReportResponse>(
-        "/api/getAllReportedContent",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+        const res =
+          await axios.get<ReportResponse>(
+            `/api/getAllReportedContent?page=${page}&limit=${limit}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
 
-      setReportedPosts(res.data.data.posts || []);
-      setReportedComments(res.data.data.comments || []);
-    } catch (error) {
-      console.log("Report fetch error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+                "Content-Type":
+                  "application/json",
+              },
+            }
+          );
+
+        /* ================= SET DATA ================= */
+
+        setReports(
+          res.data.data || []
+        );
+
+        setPagination(
+          res.data.pagination
+        );
+      } catch (error:any) {
+        const message =
+                        error?.response?.data?.message ||
+                        error?.response?.data?.error ||
+                        error.message ||
+                        "Something went wrong";
+                      toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  /* ================= INIT ================= */
 
   useEffect(() => {
     fetchReportedContent();
-  }, []);
+  }, [page]);
 
   return (
     <ReportContext.Provider
       value={{
-        reportedPosts,
-        reportedComments,
+        reports,
+
         loading,
+
+        reportedPosts,
+
+        reportedComments,
+
         fetchReportedContent,
+
+        page,
+
+        setPage,
+
+        limit,
+
+        pagination,
       }}
     >
       {children}
@@ -169,10 +208,13 @@ export function ReportedContentProvider({
 /* ================= HOOK ================= */
 
 export function useReportedContent() {
-  const ctx = useContext(ReportContext);
+  const ctx =
+    useContext(ReportContext);
 
   if (!ctx) {
-    throw new Error("useReportedContent must be used inside ReportedContentProvider");
+    throw new Error(
+      "useReportedContent must be used inside ReportedContentProvider"
+    );
   }
 
   return ctx;

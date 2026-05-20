@@ -14,7 +14,6 @@ export const generateReadUrl = async (key: string): Promise<string> => {
         });
         return url;
     } catch (error) {
-        console.error('Error generating read URL:', error);
         throw new Error('Failed to generateReadUrl');
     }
 };

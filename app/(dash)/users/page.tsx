@@ -2,12 +2,13 @@
 
 import UserTable from "@/components/ui/userTable";
 import { useUser } from "@/context/userContext";
+import { formatNumber } from "@/helper/convertNumber";
 import { ArrowDown, Ban, CircleEllipsis, MonitorDot, UsersRound } from "lucide-react";
 
 
 
 const Page = () => {
-    const {totalUsers,loading} = useUser();
+    const {totalUsers} = useUser();
   
 
 //   const cardData = [
@@ -40,18 +41,14 @@ const Page = () => {
 
 const cardData = [
   {
-    heading: "Total Users",
-    numbers: totalUsers,
+    heading: "Total Users", 
+    numbers: formatNumber(totalUsers) ,
     icon: <UsersRound size={24} color="#8B5CF6" />,
     bgColor:"bg-[#F5F3FF]",
   },
 ];
   return (
 
-    <>
-    {loading?(<div className="flex items-center justify-center w-[80%] h-[80%]">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-        </div>):(
       <div className=" font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
       <div className="flex flex-col ">
         <h1 className="font-inter font-medium text-[20px] text-[#000000]">
@@ -61,12 +58,6 @@ const cardData = [
           <span className="font-normal text-[#2F2F30] font-inter text-sm">
             Manage and monitor all user accounts across the platform
           </span>
-          {/* <button className="bg-[#ffffff] cursor-pointer border border-[#F3EDED] px-4 py-2 rounded-md flex items-center gap-2 justify-center">
-            <ArrowDown size={12} color="#000" />
-            <span className="text-[#000000] font-medium text-[12px] font-inter">
-              Export List
-            </span>
-          </button> */}
         </div>
       </div>
 
@@ -91,16 +82,15 @@ const cardData = [
           </div>
         ))}
       </div>
-<div className="w-full h-full bg-white rounded-xl p-4 flex flex-col justify-between">
+
         <UserTable />
-      </div>
+     
 
     </div>
-    )
-    }
+    
 
     
-    </>
+
   );
 };
 

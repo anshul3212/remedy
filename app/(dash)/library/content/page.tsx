@@ -7,15 +7,16 @@ import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
-  const { category, media,fetchBlogs,setMedia } = useBlog();
+  const { category, media, fetchBlogs, setMedia } = useBlog();
 
   const mediaTypeMap: Record<string, string> = {
-  IMAGE: "ARTICLE",
-  VIDEO: "VIDEO",
-  AUDIO: "AUDIO",
-};
+    IMAGE: "ARTICLE",
+    VIDEO: "VIDEO",
+    AUDIO: "AUDIO",
+  };
   const [title, setTitle] = useState("");
 
   const [readTime, setReadTime] = useState("");
@@ -25,18 +26,13 @@ const Page = () => {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [open, setOpen] = useState(false);
 
-  const[upload,setUpload]=useState(false);
-
+  const [upload, setUpload] = useState(false);
 
   const handleToggle = (id: number) => {
     setSelectedCategories((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
-    
   };
-
-
-
 
   useEffect(() => {
     const handleClickOutside = (e: any) => {
@@ -49,91 +45,102 @@ const Page = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  
+  const payload = {
+    type: media?.media_type
+      ? mediaTypeMap[media.media_type] || media.media_type
+      : "",
 
-const payload = {
-   type: media?.media_type
-    ? mediaTypeMap[media.media_type] || media.media_type
-    : "",
+    title: title,
+    description: content,
+    read_time: Number(readTime),
 
-  title: title,
-  description: content,
-  read_time: Number(readTime),
+    category: selectedCategories,
 
-  category: selectedCategories, 
-
-  media: [
-    {
-      media_url: media.media_url,
-      media_type: media.media_type,
-      thumbnail_url: "",
-    },
-  ],
-}; 
-
-
-
-const uploadBlogs = async () => {
-  
-  const token = localStorage.getItem("token");
-  if (!media.media_url) {
-    alert("Please upload media");
-    return;
-  }
-
-  if (!selectedCategories.length) {
-    alert("Please select at least one category");
-    return;
-  }
-
-  if (!title.trim()) {
-    alert("Please enter title");
-    return;
-  }
-
-  if (!readTime.trim()) {
-    alert("Please enter read time");
-    return;
-  }
-
-  if (!content.trim()) {
-    alert("Please enter content");
-    return;
-  }
-
-
-  try {
-
-    
-
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-blog`,
-      payload,
+    media: [
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+        media_url: media.media_url,
+        media_type: media.media_type,
+        thumbnail_url: media.thumbnail_url,
+      },
+    ],
+  };
+
+  const uploadBlogs = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!media?.media_url?.trim() || !media?.media_type?.trim()) {
+      toast.error("Please upload media")
+      return;
+    }
+
+    if (
+      (media.media_type === "VIDEO" || media.media_type === "AUDIO") &&
+      !media?.thumbnail_url?.trim()
+    ) {
+     
+toast.error("Please upload thumbnail")
+      return;
+    }
+
+    if (!selectedCategories.length) {
+      toast.error("Please select at least one category")
+      
+      return;
+    }
+
+    if (!title.trim()) {
+      toast.error("Please enter title")
+      return;
+    }
+
+    if (!readTime.trim()) {
+      toast.error("Please enter read time")
+      return;
+    }
+
+    if (!content.trim()) {
+      toast.error("Please enter content")
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-blog`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      }
-    );
-    setUpload(prev => !prev);
+      );
+      setUpload((prev) => !prev);
       fetchBlogs();
       setTitle("");
-    
+
       setReadTime("");
       setContent("");
       setSelectedCategories([]);
       setMedia({
-  media_url: "",
-  media_type: "",
-})
+        media_url: "",
+        media_key: "",
 
-alert("blog submitted successfully")
+        media_type: "",
 
-  } catch (error: any) {
-    console.log(error.response?.data || error.message);
-  }
-};
+        thumbnail_url: "",
+        thumbnail_key: "",
+      });
+      toast.success("blog submitted successfully");
+    } catch (error:any) {
+      const message =
+      error?.response?.data?.message ||  
+      error?.response?.data?.error ||    
+      error.message ||                   
+      "Something went wrong";
+
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
@@ -141,29 +148,27 @@ alert("blog submitted successfully")
         Blog Deatils
       </h2>
 
-      <div className="w-full h-150 flex justify-between gap-4">
-        <div className="h-80 w-[70%]  border border-[#3f3e3e] rounded-xl p-4">
-          <ImageResize upload={upload}/>
+      <div className="w-full h-[80%] flex justify-between gap-4">
+        <div className="w-[70%] h-full  border border-[#3f3e3e] rounded-xl p-4">
+          <ImageResize upload={upload} />
         </div>
 
-        <div className="  w-[30%] flex flex-col gap-4 ">
+        <div className="h-full  w-[30%] flex flex-col gap-4 ">
           <div ref={dropdownRef} className="relative w-full">
             <div
               onClick={() => setOpen((prev) => !prev)}
               className="border border-[#4C4C52] p-2 rounded-sm cursor-pointer font-normal text-sm text-[#000000bf] font-inter flex items-center justify-between"
             >
-          
+              <span className="truncate w-full">
+                {selectedCategories.length > 0
+                  ? category
+                      .filter((c) => selectedCategories.includes(c.id))
+                      .map((c) => c.name.replace(/_/g, " "))
+                      .join(", ")
+                  : "Please select categories"}
+              </span>
 
-                <span className="truncate w-full">
-    {selectedCategories.length > 0
-      ? category
-          .filter((c) => selectedCategories.includes(c.id))
-          .map((c) => c.name.replace(/_/g, " "))
-          .join(", ")
-      : "Please select categories"}
-  </span>
-
-  <ChevronDown size={14} color="#000000bf" className="shrink-0" />
+              <ChevronDown size={14} color="#000000bf" className="shrink-0" />
             </div>
 
             {open && (
@@ -202,7 +207,6 @@ alert("blog submitted successfully")
               placeholder={"Enter time"}
               width={"w-[30%]"}
             />
-
           </div>
         </div>
       </div>
@@ -211,9 +215,13 @@ alert("blog submitted successfully")
         <TextEditor setContent={setContent} content={content} />
       </div>
 
-      <button onClick={uploadBlogs} className="text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer">submit</button>
-
-      
+      <button
+        onClick={uploadBlogs}
+        className="text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer"
+      >
+        submit
+      </button>
+      <Toaster/>
     </div>
   );
 };
