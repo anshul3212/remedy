@@ -2,7 +2,7 @@
 
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
-import { CirclePile, Component, GalleryVerticalEnd, Users } from "lucide-react";
+import { CirclePile, Component, GalleryVerticalEnd, HandCoins, HeartHandshake, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -11,8 +11,8 @@ export default function SideBar({
   openSidebar,
   setOpenSidebar,
 }: {
-  openSidebar: boolean;
-  setOpenSidebar: (val: boolean) => void;
+  openSidebar?: boolean;
+  setOpenSidebar?: (val: boolean) => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -362,6 +362,20 @@ export default function SideBar({
         <CirclePile size={18} color="#ADB5BD"/>
       ),
     },
+    {
+      text: "Subscription Management",
+      route: "/subscription",
+      icon: (
+        <HandCoins size={18} color="#ADB5BD"/>
+      ),
+    },
+    {
+      text: "Help & Support",
+      route: "/help",
+      icon: (
+        <HeartHandshake  size={18} color="#ADB5BD"/>
+      ),
+    },
   ];
 
   const SidebarContent = (
@@ -371,74 +385,17 @@ export default function SideBar({
       {/* TOP */}
       <div className={`flex items-center justify-between px-4`}>
         <div className="w-25 h-20  relative">
-          <Image src="/logo.svg" alt="logo" fill className="absolute " />
+          <Image src="/logo.svg" alt="logo" fill className="absolute " unoptimized/>
         </div>
       </div>
-
-      {/* <p
-        className={`mt-4 text-sm font-semibold font-inter text-[#ADB5BD] text-start px-4`}
-      >
-        Home
-      </p> */}
-      {/* <div
-        className={`mt-4 w-full ${pathname === "/dashboard" ? "bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] shadow-[0px_1.29px_2.58px_0px_#8A92A64D] text-[#ffffff]" : "text-[#777777] hover:bg-[#f5f5f5]"}  flex items-center gap-4 px-4 py-3 rounded-sm cursor-pointer`}
-        onClick={() => router.push("/dashboard")}
-      >
-        <LayoutDashboard size={24} />
-
-        <span
-          className={` font-inter text-lg`}
-        >
-          Dashboard
-        </span>
-      </div> */}
 
       {/* MENU */}
       <div className={`mt-4   `}>
         <List>
           <div className="flex flex-col gap-4 max-h-150 overflow-y-auto scrollbar-hide">
-            {/* Title */}
-            {/* <span
-              className={`mt-4 text-sm font-semibold text-[#ADB5BD] 
-                text-start
-               px-4 sticky top-0 z-10 pb-2 bg-white`}
-            >
-              Pages
-            </span> */}
 
             {/* Menu */}
             <div className="flex flex-col gap-2">
-              {/* {menuItems.map((item, idx) => {
-                const isActive = pathname.startsWith(item.route);
-
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => router.push(item.route)}
-                    className={`flex items-center  w-full px-4 py-3 cursor-pointer rounded-sm transition
-              ${collapsed ? "justify-center" : "justify-between"}
-              ${isActive ? "bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] shadow-[0px_1.29px_2.58px_0px_#8A92A64D]" : "hover:bg-[#f5f5f5]"}
-            `}
-                  >
-                    <div className={`flex items-center gap-2 `}>
-                      {item.icon}
-                      <span
-                        className={`font-inter text-lg ${
-                          isActive ? "text-[#ffffff] " : "text-[#777777]"
-                        }  ${collapsed ? "hidden" : "block"}`}
-                      >
-                        {item.text}
-                      </span>
-                    </div>
-
-                    <ChevronRight
-                      className={`${collapsed ? "hidden" : "block"}`}
-                      size={18}
-                      color={isActive ? "#ffffff" : "#777777"}
-                    />
-                  </div>
-                );
-              })} */}
 
               {menuItems.map((item, idx) => {
                 const isActive = pathname.startsWith(item.route);
@@ -471,12 +428,6 @@ export default function SideBar({
                           {item.text}
                         </span>
                       </div>
-
-                      {/* <ChevronRight
-                          size={18}
-                          className={`${collapsed ? "hidden" : "block"}`}
-                          color={isActive ? "#ffffff" : "#777777"}
-                        /> */}
                     </div>
 
                     {/* SUB MENU */}
@@ -518,22 +469,7 @@ export default function SideBar({
   return (
     <>
       {/* DESKTOP */}
-      <div className="hidden lg:block h-full">{SidebarContent}</div>
-
-      {/* MOBILE DRAWER */}
-      <Drawer
-        anchor="left"
-        open={openSidebar}
-        onClose={() => setOpenSidebar(false)}
-        sx={{
-          display: { xs: "block", lg: "none" },
-          "& .MuiDrawer-paper": {
-            width: "70%",
-          },
-        }}
-      >
-        {SidebarContent}
-      </Drawer>
+      <div className="h-full">{SidebarContent}</div>
     </>
   );
 }

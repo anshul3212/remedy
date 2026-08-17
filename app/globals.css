@@ -49,6 +49,17 @@ button{
 }
 
 
+button:active {
+  transform: scale(0.9);
+  opacity: 80%;
+  transition: all;
+}
+
+button:hover {
+  opacity: 50%;
+  transition: all;
+}
+
 .jodit-wysiwyg ul {
   list-style-type: disc !important;
   padding-left: 24px !important;

@@ -1,4 +1,4 @@
-// middleware.ts
+
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,7 +6,7 @@ export function middleware(req: NextRequest) {
   /* ================= TOKEN ================= */
 
   const token =
-    req.cookies.get("token")?.value;
+    req.cookies.get("admin-token")?.value;
 
   /* ================= CURRENT PATH ================= */
 
@@ -16,6 +16,8 @@ export function middleware(req: NextRequest) {
 
   const publicRoutes = [
     "/login",
+    "/forget-password",
+    "/logo.png"
   ];
 
   const isPublicRoute =

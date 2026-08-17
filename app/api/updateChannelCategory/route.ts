@@ -1,3 +1,4 @@
+import { verifyAuth } from "@/helper/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -25,6 +26,18 @@ export async function OPTIONS() {
 
 export async function PUT(req: NextRequest) {
   try {
+    const user = await verifyAuth(req);
+        
+          if (!user) {
+            return NextResponse.json(
+              {
+                message: "Unauthorized",
+              },
+              {
+                status: 401,
+              }
+            );
+          }
     const body = await req.json();
 
     const { channelIds, category } = body;

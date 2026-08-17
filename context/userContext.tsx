@@ -8,7 +8,6 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
 } from "react";
 import toast from "react-hot-toast";
 
@@ -27,29 +26,16 @@ export interface User {
 
 interface UserContextType {
   users: User[];
-
-  selectedUser: User | null;
-
-  selectUser: (id: number) => void;
-
-  clearSelected: () => void;
-
-  addUser: (user: User) => void;
-
-  removeUser: (id: number) => void;
-
-  updateUser: (user: User) => void;
-
-  totalUsers: number;
-
   loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchUsers: () => Promise<void>;
 
   /* ✅ PAGINATION */
   page: number;
+  total: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
   limit: number;
   totalPages: number;
-
-  setPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 /* ================= CONTEXT ================= */
@@ -65,33 +51,43 @@ export function UserProvider({
 }: {
   children: ReactNode;
 }) {
-  const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
 
-  const [selectedUser, setSelectedUser] =
-    useState<User | null>(null);
-
-  const [totalUsers, setTotalUsers] = useState(0);
+  
 
   const [loading, setLoading] = useState(false);
 
   /* ================= PAGINATION ================= */
+  const [total, setTotal] = useState(0);
 
   const [page, setPage] = useState(1);
 
   const limit = 20;
 
-  const totalPages = Math.ceil(totalUsers / limit);
+  const totalPages = Math.ceil(total / limit);
 
   /* ================= FETCH USERS ================= */
 
-  useEffect(() => {
-    const usersData = async () => {
+    const fetchUsers= async () => {
       try {
         setLoading(true);
+        const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
         const res = await axios.get(
-          `/api/getAllUsers?page=${page}&limit=${limit}`
+          `/api/getAllUsers?page=${page}&limit=${limit}`,
+          {
+          headers: {
+            Authorization: `Bearer ${token}`,
+
+            "Content-Type": "application/json",
+          },
+        },
         );
+
 
         const formattedUsers = res.data.users.map(
           (u: any) => ({
@@ -121,9 +117,7 @@ export function UserProvider({
         );
 
         setUsers(formattedUsers);
-
-        /* ✅ FIX */
-        setTotalUsers(
+        setTotal(
           res.data.pagination.totalUsers
         );
       } catch (error: any) {
@@ -138,81 +132,23 @@ export function UserProvider({
       }
     };
 
-    usersData();
-  }, [page]);
-
-  /* ---------- CRUD ---------- */
-
-  const addUser = (user: User) => {
-    setUsers((prev) => [...prev, user]);
-  };
-
-  const removeUser = (id: number) => {
-    setUsers((prev) =>
-      prev.filter((u) => u.id !== id)
-    );
-
-    setSelectedUser((prev) =>
-      prev?.id === id ? null : prev
-    );
-  };
-
-  const updateUser = (updatedUser: User) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === updatedUser.id
-          ? updatedUser
-          : u
-      )
-    );
-
-    setSelectedUser((prev) =>
-      prev?.id === updatedUser.id
-        ? updatedUser
-        : prev
-    );
-  };
-
-  /* ---------- SELECT ---------- */
-
-  const selectUser = (id: number) => {
-    const found =
-      users.find((u) => u.id === id) || null;
-
-    setSelectedUser(found);
-  };
-
-  const clearSelected = () =>
-    setSelectedUser(null);
-
   /* ---------- PROVIDER ---------- */
 
   return (
     <UserContext.Provider
       value={{
         users,
-
-        totalUsers,
-
         loading,
+        setLoading,
+        fetchUsers,
 
-        selectedUser,
-
-        selectUser,
-
-        clearSelected,
-
-        addUser,
-
-        removeUser,
-
-        updateUser,
 
         /* ✅ PAGINATION */
         page,
         limit,
         totalPages,
         setPage,
+        total
       }}
     >
       {children}

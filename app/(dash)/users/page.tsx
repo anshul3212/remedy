@@ -3,46 +3,18 @@
 import UserTable from "@/components/ui/userTable";
 import { useUser } from "@/context/userContext";
 import { formatNumber } from "@/helper/convertNumber";
-import { ArrowDown, Ban, CircleEllipsis, MonitorDot, UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react";
 
 
 
 const Page = () => {
-    const {totalUsers} = useUser();
+    const {total} = useUser();
   
-
-//   const cardData = [
-//   {
-//     heading: "Total Users",
-//     numbers: totalUsers,
-//     icon: <UsersRound size={24} color="#8B5CF6" />,
-//     bgColor:"bg-[#F5F3FF]",
-//   },
-//   {
-//     heading: "Active Now",
-//     numbers: "14,482",
-//     icon: <MonitorDot size={24} color="#3ba936"/>,
-//     bgColor:"bg-[#ECFDF5]",
-//   },
-//   {
-//     heading: "Pending",
-//     numbers: "84",
-//     icon: <CircleEllipsis size={24} color="#D87300"/>,
-//     bgColor:"bg-[#FFFBEB]",
-//   },
-//   {
-//     heading: "Blocked",
-//     numbers: "16",
-//     icon: <Ban size={24} color="#FF0012"/>,
-//     bgColor:"bg-[#fff1f2]",
-//   },
-// ];
-
 
 const cardData = [
   {
     heading: "Total Users", 
-    numbers: formatNumber(totalUsers) ,
+    numbers: formatNumber(total) ,
     icon: <UsersRound size={24} color="#8B5CF6" />,
     bgColor:"bg-[#F5F3FF]",
   },
@@ -83,7 +55,7 @@ const cardData = [
         ))}
       </div>
 
-        <UserTable />
+      <UserTable />
      
 
     </div>

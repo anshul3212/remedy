@@ -10,6 +10,7 @@ const PriorityAlertCard = (props: any) => {
             src={props.image}
             alt="profile"
             fill
+            unoptimized
             className="object-cover absolute"
           />
         </div>

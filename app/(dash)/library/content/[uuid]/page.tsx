@@ -34,7 +34,11 @@ const Page = () => {
   const fetchBlogById = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("admin-token="))
+        ?.split("=")[1];
+      if (!token) return;
 
       const res = await axios.get(`/api/getBlogById/${uuid}`, {
         headers: {
@@ -42,13 +46,13 @@ const Page = () => {
         },
       });
       setBlog(res.data.blog);
-    } catch (error:any) {
+    } catch (error: any) {
       const message =
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error.message ||
-                "Something went wrong";
-              toast.error(message);
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -56,12 +60,11 @@ const Page = () => {
 
   useEffect(() => {
     if (uuid) fetchBlogById();
-  }, [uuid,setBlog]);
+  }, [uuid, setBlog]);
 
   /* ================= PREFILL ================= */
   useEffect(() => {
     if (!blog) return;
-
 
     setTitle(blog.title || "");
     setReadTime(String(blog.read_time || ""));
@@ -69,7 +72,7 @@ const Page = () => {
 
     if (blog.blog_categories?.length) {
       setSelectedCategories(
-        blog.blog_categories.map((c: any) => Number(c.mstr_categories?.id))
+        blog.blog_categories.map((c: any) => Number(c.mstr_categories?.id)),
       );
     }
 
@@ -89,7 +92,7 @@ const Page = () => {
   /* ================= CATEGORY TOGGLE ================= */
   const handleToggle = (id: number) => {
     setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -105,163 +108,153 @@ const Page = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
   /* ================= UPDATE BLOG ================= */
 
-const updateBlog = async () => {
-  /* ================= VALIDATIONS ================= */
+  const updateBlog = async () => {
+    /* ================= VALIDATIONS ================= */
 
-if (!title.trim()) {
-  toast.error("Please enter title")
-  
-  return;
-}
+    if (!title.trim()) {
+      toast.error("Please enter title");
 
-if (!readTime.trim()) {
-  toast.error("Please enter read time")
-  return;
-}
-
-if (!content.trim()) {
-  toast.error("Please enter content")
-  return;
-}
-
-if (!selectedCategories.length) {
-  toast.error("Please select at least one category")
-  return;
-}
-
-if (!media?.media_url) {
-  toast.error("Please upload media")
-  return;
-}
-
-/* VIDEO/AUDIO THUMBNAIL CHECK */
-
-const isVideoOrAudio =
-  media?.media_type === "VIDEO" ||
-  media?.media_type === "AUDIO";
-
-if (
-  isVideoOrAudio &&
-  !media?.thumbnail_url
-) {
-  toast.error("Please upload thumbnail")
-  return;
-}
-  try {
-    setLoading(true);
-
-    const token = localStorage.getItem("token");
-
-    if (!blog) return;
-
-    const payload: any = {
-      blog_id: String(blog.id),
-    };
-
-    /* ================= ONLY CHANGED FIELDS ================= */
-
-    if (title.trim() !== blog.title) {
-      payload.title = title;
-    }
-
-    if (content.trim() !== blog.description) {
-      payload.description = content;
-    }
-
-    if (readTime.trim() !== String(blog.read_time || "")) {
-      payload.read_time = Number(readTime);
-    }
-
-    /* ================= CATEGORY ================= */
-
-    const oldCategories =
-      blog.blog_categories?.map((c: any) =>
-        String(c.mstr_categories?.id),
-      ) || [];
-
-    const newCategories = selectedCategories.map(String);
-
-    if (
-      JSON.stringify(oldCategories.sort()) !==
-      JSON.stringify(newCategories.sort())
-    ) {
-      payload.category = newCategories;
-    }
-
-    /* ================= MEDIA ================= */
-
-    const oldMedia = blog.blog_media?.[0];
-
-    const mediaChanged =
-      media?.media_url !== oldMedia?.media_url ||
-      media?.thumbnail_url !== oldMedia?.thumbnail_url;
-
-    if (mediaChanged && media?.media_url) {
-      payload.type = media?.media_type
-        ? mediaTypeMap[media.media_type] || media.media_type
-        : blog.type;
-
-      payload.media = [
-        {
-          media_url: media.media_url,
-
-          // IMPORTANT
-          media_key:
-            media.media_key || oldMedia?.media_key,
-
-          media_type:
-            media.media_type || oldMedia?.media_type,
-
-          thumbnail_url:
-            media.thumbnail_url ||
-            oldMedia?.thumbnail_url,
-
-          thumbnail_key:
-            media.thumbnail_key ||
-            oldMedia?.thumbnail_key,
-        },
-      ];
-    }
-
-    /* ================= NOTHING CHANGED ================= */
-
-    if (Object.keys(payload).length === 1) {
-      toast.error("No changes found");
-      setLoading(false);
       return;
     }
 
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_DEV_URL}/blog/update-blog`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    if (!readTime.trim()) {
+      toast.error("Please enter read time");
+      return;
+    }
 
-    await fetchBlogById();
-    toast.success("Blog Updated successfully");
-await fetchBlogs();
-    
-    
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.message ||  
-      error?.response?.data?.error ||    
-      error.message ||                   
-      "Something went wrong";
+    if (!content.trim()) {
+      toast.error("Please enter content");
+      return;
+    }
+
+    if (!selectedCategories.length) {
+      toast.error("Please select at least one category");
+      return;
+    }
+
+    if (!media?.media_url) {
+      toast.error("Please upload media");
+      return;
+    }
+
+    /* VIDEO/AUDIO THUMBNAIL CHECK */
+
+    const isVideoOrAudio =
+      media?.media_type === "VIDEO" || media?.media_type === "AUDIO";
+
+    if (isVideoOrAudio && !media?.thumbnail_url) {
+      toast.error("Please upload thumbnail");
+      return;
+    }
+    try {
+      setLoading(true);
+
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("admin-token="))
+        ?.split("=")[1];
+      if (!token) return;
+
+      if (!blog) return;
+
+      const payload: any = {
+        blog_id: String(blog.id),
+      };
+
+      /* ================= ONLY CHANGED FIELDS ================= */
+
+      if (title.trim() !== blog.title) {
+        payload.title = title;
+      }
+
+      if (content.trim() !== blog.description) {
+        payload.description = content;
+      }
+
+      if (readTime.trim() !== String(blog.read_time || "")) {
+        payload.read_time = Number(readTime);
+      }
+
+      /* ================= CATEGORY ================= */
+
+      const oldCategories =
+        blog.blog_categories?.map((c: any) => String(c.mstr_categories?.id)) ||
+        [];
+
+      const newCategories = selectedCategories.map(String);
+
+      if (
+        JSON.stringify(oldCategories.sort()) !==
+        JSON.stringify(newCategories.sort())
+      ) {
+        payload.category = newCategories;
+      }
+
+      /* ================= MEDIA ================= */
+
+      const oldMedia = blog.blog_media?.[0];
+
+      const mediaChanged =
+        media?.media_url !== oldMedia?.media_url ||
+        media?.thumbnail_url !== oldMedia?.thumbnail_url;
+
+      if (mediaChanged && media?.media_url) {
+        payload.type = media?.media_type
+          ? mediaTypeMap[media.media_type] || media.media_type
+          : blog.type;
+
+        payload.media = [
+          {
+            media_url: media.media_url,
+
+            // IMPORTANT
+            media_key: media.media_key || oldMedia?.media_key,
+
+            media_type: media.media_type || oldMedia?.media_type,
+
+            thumbnail_url: media.thumbnail_url || oldMedia?.thumbnail_url,
+
+            thumbnail_key: media.thumbnail_key || oldMedia?.thumbnail_key,
+          },
+        ];
+      }
+
+      /* ================= NOTHING CHANGED ================= */
+
+      if (Object.keys(payload).length === 1) {
+        toast.error("No changes found");
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_DEV_URL}/admin/blog/update-blog`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      await fetchBlogById();
+      toast.success("Blog Updated successfully");
+      await fetchBlogs();
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
 
       toast.error(message);
-  } finally {
-    setLoading(false);
-  }
-};
+    } finally {
+      setLoading(false);
+    }
+  };
   /* ================= UI ================= */
   return (
     <>
@@ -279,30 +272,23 @@ await fetchBlogs();
                 initialMedia={
                   media?.media_url
                     ? {
-                        media_url:
-                          blog?.blog_media?.[0]?.media_url,
-                        media_key:
-                          blog?.blog_media?.[0]?.media_key,
-                        media_type:
-                          blog?.blog_media?.[0]?.media_type,
+                        media_url: blog?.blog_media?.[0]?.media_url,
+                        media_key: blog?.blog_media?.[0]?.media_key,
+                        media_type: blog?.blog_media?.[0]?.media_type,
                         thumbnail_url:
-                          blog?.blog_media?.[0]?.thumbnail_url ||
-                          "",
+                          blog?.blog_media?.[0]?.thumbnail_url || "",
                         thumbnail_key:
-                          blog?.blog_media?.[0]?.thumbnail_key ||
-                          "",
+                          blog?.blog_media?.[0]?.thumbnail_key || "",
                       }
                     : undefined
                 }
-
-                
               />
             </div>
 
             <div className="w-[30%] flex flex-col gap-4">
               {/* CATEGORY */}
-                         <div ref={dropdownRef} className="relative w-full">
-               <div
+              <div ref={dropdownRef} className="relative w-full">
+                <div
                   onClick={() => setOpen((prev) => !prev)}
                   className="border border-[#4C4C52] p-2 rounded-sm cursor-pointer font-normal text-sm text-[#000000bf] flex items-center justify-between"
                 >
@@ -344,9 +330,7 @@ await fetchBlogs();
                 label="Title"
                 type="text"
                 value={title}
-                onChange={(e: any) =>
-                  setTitle(e.target.value)
-                }
+                onChange={(e: any) => setTitle(e.target.value)}
               />
 
               {/* READ TIME */}
@@ -354,18 +338,13 @@ await fetchBlogs();
                 label="Read Time"
                 type="text"
                 value={readTime}
-                onChange={(e: any) =>
-                  setReadTime(e.target.value)
-                }
+                onChange={(e: any) => setReadTime(e.target.value)}
                 width="w-[30%]"
               />
             </div>
           </div>
 
-          <TextEditor
-            content={content}
-            setContent={setContent}
-          />
+          <TextEditor content={content} setContent={setContent} />
 
           <button
             onClick={updateBlog}
@@ -373,7 +352,6 @@ await fetchBlogs();
           >
             Update
           </button>
-          <Toaster/>
         </div>
       )}
     </>

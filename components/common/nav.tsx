@@ -4,324 +4,15 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import {  ArrowLeft, BellIcon, ChevronDown, Globe, Mail, MoonIcon, Search, SettingsIcon, TextAlignJustify } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Search,
+  User2,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-// import Topmenu from "./topMenu";
-// import axios from "axios";
 
-const notifications = [
-  {
-    id: 1,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "2m",
-  },
-  {
-    id: 2,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "4h",
-  },
-  {
-    id: 3,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "5h",
-  },
-
-  {
-    id: 4,
-    text: "Account Verified",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.6667 3.5L5.25004 9.91667L2.33337 7"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#19BF16]",
-    message: "Your account has been successfully verified.",
-    time: "23h",
-  },
-
-  {
-    id: 5,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "23h",
-  },
-
-  {
-    id: 6,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "23h",
-  },
-
-  {
-    id: 7,
-    text: "New Appointment",
-    icon: (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M11.0833 2.33337H2.91667C2.27233 2.33337 1.75 2.85571 1.75 3.50004V11.6667C1.75 12.311 2.27233 12.8334 2.91667 12.8334H11.0833C11.7277 12.8334 12.25 12.311 12.25 11.6667V3.50004C12.25 2.85571 11.7277 2.33337 11.0833 2.33337Z"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.33337 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.66663 1.16663V3.49996"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M1.75 5.83337H12.25"
-          stroke="white"
-          strokeWidth="1.33"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-
-    bgColor: "bg-[#3381F8]",
-    message: "You have a new appointment booking.",
-    time: "23h",
-  },
-];
-
-const DashTop = ({
-  setOpenSidebar,
-}: {
-  setOpenSidebar: any;
-}) => {
+const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:string; image:string }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [search, setSearch] = useState("");
@@ -348,53 +39,29 @@ const DashTop = ({
     };
   }, [showNotifications]);
 
-  const [userName, setUserName] = useState("");
-const [userImage, setUserImage] = useState("");
-
-useEffect(() => {
-  const storedName =
-    localStorage.getItem("user_name");
-
-  const storedImage =
-    localStorage.getItem("user_image");
-
-  if (storedName) {
-    setUserName(storedName);
-  }
-
-  if (storedImage) {
-    setUserImage(storedImage);
-  }
-}, []);
+  
 
   const handleLogout = async () => {
-  try {
-    /* ================= REMOVE STORAGE ================= */
+    try {
 
-    localStorage.removeItem("token");
+      /* ================= REMOVE COOKIE ================= */
 
-    localStorage.removeItem("user_name");
+      document.cookie =
+        "admin-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
 
-    localStorage.removeItem("user_image");
+      /* ================= REDIRECT ================= */
+      toast.success("logout successfully");
+      router.replace("/login");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
 
-    /* ================= REMOVE COOKIE ================= */
-
-    document.cookie =
-      "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
-
-    /* ================= REDIRECT ================= */
-    toast.success("logout successfully")
-    router.replace("/login");
-  } catch (error:any) {
-    const message =
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error.message ||
-                "Something went wrong";
-
-              toast.error(message);
-  }
-};
+      toast.error(message);
+    }
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -407,21 +74,17 @@ useEffect(() => {
   }, [showMenu]);
 
   return (
-    <div className="bg-[#fbfaff] h-24 border-[#eee7e7] border-b flex items-center justify-between  w-full relative">
-      <div className="flex items-center gap-4 ml-4">
-
-
-
+    <div className="bg-[#fbfaff] h-24 border-[#eee7e7] border-b flex items-center justify-between  w-full relative px-4">
+      <div className="flex items-center gap-4 ">
         <div
           className={`cursor-pointer bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] rounded-full p-2 lg:hidden`}
           onClick={() => setOpenSidebar(true)}
         >
-          <ArrowLeft color="#ffffff" size={14}/>
+          <ArrowLeft color="#ffffff" size={14} />
         </div>
 
         <div className="bg-[#f6f6f9] flex items-center px-2 rounded-sm border border-[#30384F29] ">
-          
-            <Search color="#ADB5BD" className="cursor-pointer"/>
+          <Search color="#ADB5BD" className="cursor-pointer" />
           <input
             type="text"
             placeholder="Search data or users"
@@ -429,49 +92,44 @@ useEffect(() => {
             onChange={(e) => setSearch(e.target.value)}
             className="px-6 text-[#000000bf] placeholder:text-[#ADB5BD]  font-inter font-normal text-sm  h-12 w-86 outline-none"
           />
-          
         </div>
       </div>
-      {/* <Topmenu /> */}
+   
 
-      <div className="hidden  lg:flex items-center justify-end gap-6 w-[60%] h-full relative">
-        <div className="flex h-full items-center gap-6">
-          {/* theme icon */}
-          {/* <MoonIcon fill="#000"/> */}
-          {/* earth icon */}
-          {/* <Globe/> */}
-  
-        </div>
-
-        <div className="relative h-full  w-[35%] " ref={menuRef} >
+        <div className="relative h-full " ref={menuRef}>
           <div
-            className="border-l border-[#F0F1F3] flex items-center justify-between h-full px-4 w-full cursor-pointer "
+            className="border-l border-[#F0F1F3]  flex items-center gap-8 justify-between h-full px-4 w-full cursor-pointer "
             onClick={() => setShowMenu((prev) => !prev)}
           >
             <div className="flex items-center gap-4 ">
               <div className="w-16 h-16 rounded-full overflow-hidden relative">
-                <Image
-                  src={userImage||"/logo.png"}
-                  alt="profile"
-                  fill
-                  className="object-cover absolute"
-                />
-                
+                {image ? (
+                  <Image
+                    src={image}
+                    alt="profile"
+                    fill
+                    unoptimized
+                    className="object-cover absolute"
+                  />
+                ) : (
+                  <div className=" w-16 h-16 rounded-full  border border-[#ececec] flex items-center justify-center">
+                    <User2 size={24} color="#7d7d7d" />
+                  </div>
+                )}
               </div>
               <span className="w-5 h-5 rounded-full bg-[#3DA172] bottom-4 left-15 border border-[#000000] absolute" />
 
               <div className="flex flex-col">
-<span className="text-[#000000] font-inter  font-normal text-sm capitalize">
-                {userName}
-              </span>
-              <span className="text-[#667085] font-inter  font-medium text-[12px] capitalize">
-                Admin
-              </span>
+                <span className="text-[#000000] font-inter  font-normal text-sm capitalize">
+                  {name}
+                </span>
+                <span className="text-[#667085] font-inter  font-medium text-[12px] capitalize">
+                  Admin
+                </span>
               </div>
-              
             </div>
 
-           <ChevronDown/>
+            <ChevronDown className="shrink-0" />
           </div>
 
           <AnimatePresence>
@@ -484,45 +142,6 @@ useEffect(() => {
                 className="absolute right-0 top-[85.5px] mt-2  bg-[#ffffff] w-[70%]  z-50"
               >
                 <ul className="text-[#000000] text-sm  font-medium px-2">
-                  {/* <div className="flex items-center hover:bg-[#e8e8eb]">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.3334 14V12.6667C13.3334 11.9594 13.0525 11.2811 12.5524 10.781C12.0523 10.281 11.374 10 10.6667 10H5.33341C4.62617 10 3.94789 10.281 3.4478 10.781C2.9477 11.2811 2.66675 11.9594 2.66675 12.6667V14"
-                        fill="black"
-                        fillOpacity="0.2"
-                      />
-                      <path
-                        d="M13.3334 14V12.6667C13.3334 11.9594 13.0525 11.2811 12.5524 10.781C12.0523 10.281 11.374 10 10.6667 10H5.33341C4.62617 10 3.94789 10.281 3.4478 10.781C2.9477 11.2811 2.66675 11.9594 2.66675 12.6667V14"
-                        stroke="black"
-                        strokeWidth="1.33"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M7.99992 7.33333C9.47268 7.33333 10.6666 6.13943 10.6666 4.66667C10.6666 3.19391 9.47268 2 7.99992 2C6.52716 2 5.33325 3.19391 5.33325 4.66667C5.33325 6.13943 6.52716 7.33333 7.99992 7.33333Z"
-                        fill="black"
-                        fillOpacity="0.2"
-                        stroke="black"
-                        strokeWidth="1.33"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-
-                    <li
-                      className="px-4 py-2  cursor-pointer transition"
-                      onClick={() => alert("Go to Profile")}
-                    >
-                      Profile
-                    </li>
-                  </div> */}
-
                   <div className="flex items-center hover:bg-[#e8e8eb]">
                     <svg
                       width="16"
@@ -571,8 +190,7 @@ useEffect(() => {
             )}
           </AnimatePresence>
         </div>
-      </div>
-      <Toaster/>
+
     </div>
   );
 };

@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import Image from "next/image";
@@ -9,10 +7,13 @@ import {
   Heart,
   ImageIcon,
   MessageSquare,
+  TriangleAlert,
+  User2,
   UserCircle2,
+  X,
 } from "lucide-react";
 
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 
 import axios from "axios";
 
@@ -20,6 +21,8 @@ import { useEffect, useState } from "react";
 
 import { usePost } from "@/context/getAllPostContext";
 import toast, { Toaster } from "react-hot-toast";
+import { formatNumber } from "@/helper/convertNumber";
+import Loader from "@/components/ui/loaders/loader";
 
 const Page = () => {
   const router = useRouter();
@@ -31,8 +34,14 @@ const Page = () => {
   const mediaId = searchParams.get("mediaId");
 
   const [post, setPost] = useState<any>(null);
+  const [showPostReports, setShowPostReports] = useState<any>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedMediaId,setSelectedMediaId] = useState<number|null>(null)
+    const [name, setName] = useState("");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
   const [visible, setVisible] = useState(false);
 
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -44,16 +53,28 @@ const Page = () => {
 
     const fetchPost = async () => {
       try {
-        const res = await axios.get(`/api/getPostByID/${id}`);
+        setLoading(true);
+        const token = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("admin-token="))
+          ?.split("=")[1];
+        if (!token) return;
+        const res = await axios.get(`/api/getPostByID/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+
+            "Content-Type": "application/json",
+          },
+        });
 
         setPost(res.data.post);
       } catch (error: any) {
         const message =
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error.message ||
-                "Something went wrong";
-              toast.error(message);
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error.message ||
+          "Something went wrong";
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -68,9 +89,7 @@ const Page = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center w-[80%] h-[80%]">
-        <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-      </div>
+      <Loader/>
     );
   }
 
@@ -100,85 +119,44 @@ const Page = () => {
     })}`;
   };
 
-  const PostInfoData = [
-    {
-      topic: "Post ID",
-      desc: `${post?.id}`,
-    },
-    {
-      topic: "Type",
-      desc: "Post",
-    },
-    {
-      topic: "Reports",
-      desc: `${post?._count.post_reports}`,
-    },
-    {
-      topic: "Visibility",
-      desc: "Public",
-    },
-  ];
-
-
-
   const deletePost = async (postId: string) => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
-    toast((t) => (
-    <div className="flex flex-col gap-4 py-4">
-      <p className="text-sm font-medium font-inter text-[#747474]">
-        Are you sure you want to delete this post?
-      </p>
+    try {
+      setDeleteLoading(true)
+                const res =await axios.post(
+                  `${process.env.NEXT_PUBLIC_DEV_URL}/admin/community/remove-post`,
+                  {
+                    post_id: postId,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                  },
+                );
+console.log(res.data)
+                toast.success("Post deleted");
+                setOpenModal(false);
 
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={() => toast.dismiss(t.id)}
-          className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323]"
-        >
-          Cancel
-        </button>
+                await fetchPosts();
 
-        <button
-          onClick={async () => {
-            toast.dismiss(t.id);
-
-            try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_URL}/community/remove-post`,
-        {
-          post_id: postId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      toast.success("post deleted");
-
-      fetchPosts();
-
-      router.back();
-    } catch (error: any) {
-      
-      const message =
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error.message ||
-                "Something went wrong";
-              toast.error(message);
-    }
-          }}
-          className="px-4 py-2 text-sm bg-red-500 text-white border  rounded-sm font-inter text-[12px] font-medium"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  ));
-
+                router.back();
+              } catch (error: any) {
+                const message =
+                  error?.response?.data?.message ||
+                  error?.response?.data?.error ||
+                  error.message ||
+                  "Something went wrong";
+                toast.error(message);
+              }finally{
+                setDeleteLoading(false);
+              }
   };
 
   return (
@@ -191,40 +169,53 @@ const Page = () => {
         <div className="w-[60%]  flex flex-col gap-4">
           <div className="w-full rounded-md shadow-[0px_0px_2.51px_0px_#00000040] p-4">
             <div className="flex flex-col gap-8">
-              <div className="flex gap-4">
-                {post?.users?.users_profile?.profile_image ? (
-                  <div className="flex w-14 h-14 overflow-hidden relative rounded-full">
-                    <Image
-                      src={post?.users?.users_profile?.profile_image}
-                      alt="profile"
-                      fill
-                      className="object-cover absolute"
-                      unoptimized
-                    />
+              <div className="flex items-center justify-between">
+                <div className="flex gap-4">
+                  {post?.users?.users_profile?.profile_image ? (
+                    <div className="flex w-14 h-14 overflow-hidden relative rounded-full">
+                      <Image
+                        src={post?.users?.users_profile?.profile_image}
+                        alt="profile"
+                        fill
+                        className="object-cover absolute"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[#e9e8e8bd]">
+                      <User2 size={30} color="#727272" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col">
+                    <span className="font-inter text-lg font-medium text-[#111111]">
+                      {`${post?.users?.users_profile?.first_name}${" "}${post?.users?.users_profile?.last_name}`}
+                    </span>
+
+                    <div className="flex items-center font-inter text-sm font-medium text-[#7d7d7d]">
+                      <span>@{post?.users?.users_profile?.user_name}</span>
+
+                      <Dot size={16} color="#000" />
+
+                      <span>{post?.channels?.name}</span>
+                    </div>
+
+                    <span className="flex items-center font-inter text-xs font-medium text-[#7d7d7d]">
+                      {formattedDate(post?.created_at)}
+                    </span>
                   </div>
-                ) : (
-                  <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[#b8b5b5]">
-                    <UserCircle2 size={30} color="#727272" />
-                  </div>
-                )}
-
-                <div className="flex flex-col">
-                  <span className="font-inter text-lg font-medium text-[#111111]">
-                    {`${post?.users?.users_profile?.first_name}${" "}${post?.users?.users_profile?.last_name}`}
-                  </span>
-
-                  <div className="flex items-center font-inter text-sm font-medium text-[#7d7d7d]">
-                    <span>@{post?.users?.users_profile?.user_name}</span>
-
-                    <Dot size={16} color="#000" />
-
-                    <span>{post?.channels?.name}</span>
-                  </div>
-
-                  <span className="flex items-center font-inter text-xs font-medium text-[#7d7d7d]">
-                    {formattedDate(post?.created_at)}
-                  </span>
                 </div>
+                {post._count.post_reports > 0 && (
+                  <button
+                    onClick={() => setShowPostReports(post)}
+                    className="bg-[#ffa600f3] px-4 py-2 rounded-md flex items-center gap-2"
+                  >
+                    <TriangleAlert color="#ffffff" size={18} />
+                    <span className="font-inter text-sm font-medium text-[#ffffff]">
+                      Post Reports {formatNumber(post._count.post_reports)}
+                    </span>
+                  </button>
+                )}
               </div>
 
               <p className="font-inter text-sm font-medium text-[#7d7d7d] text-justify">
@@ -239,12 +230,13 @@ const Page = () => {
                     }
                     alt="post"
                     fill
+                    unoptimized
                     className="object-contain absolute"
                   />
                 </div>
               ) : (
-                <div className="w-full bg-[#b8b5b5] border border-[#d1d1d1] h-50 rounded-md flex items-center justify-center">
-                  <ImageIcon size={50} color="#727272" />
+                <div className="w-full  border border-[#d1d1d1] bg-[#e9e8e8bd] h-50 rounded-md flex items-center justify-center">
+                  <ImageIcon size={50} color="#b6b3b3" />
                 </div>
               )}
 
@@ -253,7 +245,7 @@ const Page = () => {
                   <Heart size={18} color="#7d7d7d" />
 
                   <span className="text-sm font-inter font-bold text-[#7d7d7d]">
-                    {post?.total_likes}
+                    {formatNumber(post?.total_likes)}
                   </span>
                 </div>
 
@@ -265,58 +257,73 @@ const Page = () => {
                   />
 
                   <span className="text-sm font-inter font-bold text-[#7d7d7d]">
-                    {post?.total_comments}
+                    {formatNumber(post?.total_comments)}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {post._count.post_reports > 0 && (
-            <div className="w-full rounded-md shadow-[0px_0px_2.51px_0px_#00000040] flex flex-col gap-4 max-h-50 overflow-y-auto">
-              <p className="font-inter text-lg font-medium text-[#111111] sticky top-0 z-10 bg-[#f7f7fe] p-4 ">
-                Post Reports {`${post?._count.post_reports}`}
-              </p>
+          {showPostReports && (
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-999 flex items-center justify-center">
+              <div className="relative z-10 w-[90%] max-w-md max-h-[70vh] overflow-y-auto scrollbar-hide bg-white rounded-xl shadow-xl flex flex-col gap-2">
+                {/* HEADER */}
+                <div className="flex items-center justify-between sticky top-0 bg-white z-10  px-4 py-4">
+                  <p className="text-lg font-semibold text-black font-inter">
+                    Post Reports ({showPostReports._count.post_reports})
+                  </p>
 
-              <div className="px-4 pb-4 flex flex-col gap-4">
-                {post?.post_reports.map((data: any, idx: number) => (
-                  <div className="flex flex-col gap-4" key={idx}>
-                    <div className="flex flex-col gap-6 justify-between">
-                      <div className="flex items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-full overflow-hidden relative">
+                  <button
+                    onClick={() => setShowPostReports(null)}
+                    className="text-sm text-red-500 cursor-pointer font-inter"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* REPORT LIST */}
+                <div className="flex flex-col gap-3 px-4 pb-2">
+                  {showPostReports.post_reports.map(
+                    (report: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="border border-red-100 rounded-md p-3 flex items-start gap-3 bg-red-50"
+                      >
+                        {/* PROFILE IMAGE */}
+                        {report.users.users_profile.profile_image ? (
+                          <div className="w-12 h-12 rounded-full relative overflow-hidden shrink-0">
                             <Image
-                              src={"/logo.png"}
-                              alt="profile"
+                              src={report.users.users_profile.profile_image}
+                              alt="reporter"
                               fill
-                              className="object-cover absolute"
                               unoptimized
+                              className="object-cover"
                             />
                           </div>
-
-                          <div className="flex flex-col">
-                            <span className="font-inter font-semibold text-[11px] text-[#272424]">
-                              {data.reason}
-                            </span>
-
-                            <div className="flex items-center gap-2">
-                              <span className="font-inter font-semibold text-[11px] text-[#272424]">
-                                Reported by @
-                                {data.users.users_profile?.user_name}
-                              </span>
-
-                              <div className="w-1 h-1 bg-black rounded-full" />
-
-                              <span className="font-inter font-semibold text-[11px] text-[#838383]">
-                                {formattedDate(data.created_at)}
-                              </span>
-                            </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-[#e9e8e8bd]">
+                            <User2 size={24} color="#7d7d7d" />
                           </div>
+                        )}
+
+                        {/* REPORT INFO */}
+                        <div className="flex flex-col gap-1 flex-1">
+                          <span className="text-sm font-medium text-black font-inter">
+                            @{report.users.users_profile?.user_name}
+                          </span>
+
+                          <span className="text-xs text-red-500 font-medium font-inter">
+                            {report.reason}
+                          </span>
+
+                          <span className="text-[11px] text-[#888] font-inter ">
+                            {formattedDate(report.created_at)}
+                          </span>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    ),
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -332,7 +339,7 @@ const Page = () => {
               <div className="flex flex-col gap-4 justify-between font-inter text-sm font-medium text-[#7d7d7d]">
                 <button
                   className="w-full bg-red-500 text-white py-4 rounded-md cursor-pointer"
-                  onClick={() => deletePost(post.id)}
+                  onClick={() => setOpenModal(true)}
                 >
                   Delete Post
                 </button>
@@ -340,18 +347,15 @@ const Page = () => {
             </div>
           </div>
           <div
-  className={`w-full h-[70%] min-h-0 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] p-4 relative overflow-hidden ${
-    visible && comments.length > 0
-      ? "flex flex-col gap-4"
-      : "hidden"
-  }`}
->
+            className={`w-full h-[70%] min-h-0 rounded-md shadow-[0px_0px_2.51px_0px_#00000040] p-4 relative overflow-hidden ${
+              visible && comments.length > 0 ? "flex flex-col gap-4" : "hidden"
+            }`}
+          >
             <p className="font-inter shrink-0 text-lg font-medium sticky top-0 text-[#111111] z-10">
               Comments
             </p>
 
             <div className="flex flex-col w-full gap-2  flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-              
               {comments.map((c: any, idx: number) => {
                 const isReported = c.comment_reports?.length > 0;
 
@@ -371,18 +375,21 @@ const Page = () => {
         }`}
                   >
                     {/* PROFILE */}
-                    <div className="w-14 h-14 rounded-full relative overflow-hidden shrink-0">
-                      <Image
-                        src={
-                          c.users.users_profile.profile_image
-                            ? c.users.users_profile.profile_image
-                            : "/logo.png"
-                        }
-                        alt="user profile"
-                        fill
-                        className="absolute object-cover rounded-full"
-                      />
-                    </div>
+                    {c.users.users_profile.profile_image ? (
+                      <div className="w-14 h-14 rounded-full relative overflow-hidden shrink-0">
+                        <Image
+                          src={c.users.users_profile.profile_image}
+                          alt="user profile"
+                          fill
+                          unoptimized
+                          className="absolute object-cover rounded-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14  rounded-full flex items-center justify-center shrink-0 bg-[#e9e8e8bd]">
+                        <User2 size={30} color="#7d7d7d" />
+                      </div>
+                    )}
 
                     {/* CONTENT */}
                     <div className="flex flex-col gap-1">
@@ -411,38 +418,27 @@ const Page = () => {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
                 {/* OVERLAY CLOSE */}
                 <div
-                  className="absolute inset-0"
+                  className="absolute z-10 w-[90%] max-w-md max-h-[70vh] overflow-y-auto scrollbar-hide bg-white rounded-xl shadow-xl flex flex-col gap-2 "
                   onClick={() => setSelectedReport(null)}
                 />
 
                 {/* POPUP CARD */}
-                <div className="relative z-10 w-[90%] max-w-md max-h-[70vh] overflow-y-auto scrollbar-hide bg-white rounded-xl shadow-xl p-4 flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg font-semibold text-black">
+                <div className="relative z-10 w-[90%] max-w-md max-h-[70vh] overflow-y-auto scrollbar-hide bg-white rounded-xl shadow-xl flex flex-col gap-2">
+                  <div className="flex items-center justify-between sticky top-0 bg-white z-10  px-4 py-4">
+                    <p className="text-lg font-semibold text-black font-inter">
                       Report Details
                     </p>
 
                     <button
                       onClick={() => setSelectedReport(null)}
-                      className="text-sm text-red-500 cursor-pointer"
+                      className="text-sm text-red-500 font-inter cursor-pointer"
                     >
                       Close
                     </button>
                   </div>
 
-                  {/* COMMENT INFO */}
-                  <div className="bg-[#f8f8f8] rounded-md p-3 flex flex-col gap-2">
-                    <span className="font-medium text-sm text-black">
-                      {`${selectedReport.users.users_profile.first_name} ${selectedReport.users.users_profile.last_name}`}
-                    </span>
-
-                    <span className="text-xs text-[#666]">
-                      {selectedReport.comment}
-                    </span>
-                  </div>
-
                   {/* REPORT LIST */}
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 px-4 pb-2">
                     {selectedReport.comment_reports.map(
                       (r: any, idx: number) => (
                         <div
@@ -450,31 +446,34 @@ const Page = () => {
                           className="border border-red-100 rounded-md p-3 flex items-start gap-3 bg-red-50"
                         >
                           {/* REPORTER IMAGE */}
-                          <div className="w-12 h-12 rounded-full relative overflow-hidden shrink-0">
-                            <Image
-                              src={
-                                r.users?.users_profile?.profile_image
-                                  ? r.users.users_profile.profile_image
-                                  : "/logo.png"
-                              }
-                              alt="reporter"
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
+                          {r.users.users_profile.profile_image ? (
+                            <div className="w-12 h-12 rounded-full relative overflow-hidden shrink-0">
+                              <Image
+                                src={r.users.users_profile.profile_image}
+                                alt="reporter"
+                                fill
+                                unoptimized
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-[#e9e8e8bd]">
+                              <User2 size={30} color="#7d7d7d" />
+                            </div>
+                          )}
 
                           {/* REPORT INFO */}
                           <div className="flex flex-col gap-1">
-                            <span className="text-sm font-medium text-black">
+                            <span className="text-sm font-medium text-black font-inter">
                               {`${r.users?.users_profile?.first_name} ${r.users?.users_profile?.last_name}`}
                             </span>
 
-                            <span className="text-xs text-red-500 font-medium">
+                            <span className="text-xs text-red-500 font-medium font-inter">
                               {r.reason}
                             </span>
 
-                            <span className="text-[11px] text-[#888]">
-                              {new Date(r.created_at).toLocaleString()}
+                            <span className="text-[11px] text-[#888] font-inter">
+                              {formattedDate(r.created_at)}
                             </span>
                           </div>
                         </div>
@@ -487,7 +486,59 @@ const Page = () => {
           </div>
         </div>
       </div>
-      <Toaster/>
+
+      {openModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="shadow-md bg-[white] border border-[#787878] rounded-2xl w-155.75 p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[18px] font-normal text-[black] font-inter">
+                     Please Specify Deleting Reason
+                    </h2>
+                    <X
+                      color="black"
+                      size={23}
+                      onClick={() => {
+                        setOpenModal(false);
+                        setName("");
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+      
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter Reason"
+                    className="w-full border border-[#7d7d7d] p-2 rounded-md text-sm outline-none h-12"
+                  />
+      
+                  <div className="flex justify-end gap-2">
+                    {/* Cancel Button */}
+                    <button
+                      onClick={() => {
+                        setOpenModal(false);
+                        setName("");
+                      }}
+                      className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323] min-w-35.75"
+                    >
+                      Cancel
+                    </button>
+      
+                    {/* Add Button */}
+                    <button
+                      disabled={!name.trim()}
+                      onClick={() => {
+                        deletePost(post.id)
+                      }}
+                      className={`px-4 py-2 text-sm rounded-sm font-inter text-[12px] font-medium text-[white] bg-red-500 cursor-pointer min-w-35.75 ${!name.trim() || loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                    >
+                      {!deleteLoading ? "Delete" : "Deleting"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
     </div>
   );
 };

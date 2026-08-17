@@ -66,10 +66,14 @@ const Page = () => {
   };
 
   const uploadBlogs = async () => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
     if (!media?.media_url?.trim() || !media?.media_type?.trim()) {
-      toast.error("Please upload media")
+      toast.error("Please upload media");
       return;
     }
 
@@ -77,35 +81,34 @@ const Page = () => {
       (media.media_type === "VIDEO" || media.media_type === "AUDIO") &&
       !media?.thumbnail_url?.trim()
     ) {
-     
-toast.error("Please upload thumbnail")
+      toast.error("Please upload thumbnail");
       return;
     }
 
     if (!selectedCategories.length) {
-      toast.error("Please select at least one category")
-      
+      toast.error("Please select at least one category");
+
       return;
     }
 
     if (!title.trim()) {
-      toast.error("Please enter title")
+      toast.error("Please enter title");
       return;
     }
 
     if (!readTime.trim()) {
-      toast.error("Please enter read time")
+      toast.error("Please enter read time");
       return;
     }
 
     if (!content.trim()) {
-      toast.error("Please enter content")
+      toast.error("Please enter content");
       return;
     }
 
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-blog`,
+        `${process.env.NEXT_PUBLIC_DEV_URL}/admin/blog/create-blog`,
         payload,
         {
           headers: {
@@ -131,12 +134,12 @@ toast.error("Please upload thumbnail")
         thumbnail_key: "",
       });
       toast.success("blog submitted successfully");
-    } catch (error:any) {
+    } catch (error: any) {
       const message =
-      error?.response?.data?.message ||  
-      error?.response?.data?.error ||    
-      error.message ||                   
-      "Something went wrong";
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
 
       toast.error(message);
     }
@@ -221,7 +224,6 @@ toast.error("Please upload thumbnail")
       >
         submit
       </button>
-      <Toaster/>
     </div>
   );
 };

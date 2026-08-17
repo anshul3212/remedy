@@ -1,7 +1,7 @@
 "use client";
 
 import LibrayTable from "@/components/ui/libraryTable";
-import { TextAlignStart } from "lucide-react";
+import { TextAlignStart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -11,7 +11,7 @@ const Page = () => {
   const [openFilter, setOpenFilter] = useState(false);
 
   const router = useRouter();
- 
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -54,18 +54,33 @@ const Page = () => {
                 className="bg-[#ffffff] cursor-pointer border border-[#F3EDED] px-4 py-2 rounded-md flex items-center gap-2 justify-center"
               >
                 <TextAlignStart size={12} color="#000" />
+
                 <span className="text-[#000000] font-medium text-[12px] font-inter">
                   Filters
                 </span>
+
+                {filterType && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilterType(null);
+                    }}
+                    className="bg-[#f65c5c] text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
+                  >
+                    <span className="text-[10px]">{filterType}</span>
+
+                    <X size={10} className="cursor-pointer" />
+                  </div>
+                )}
               </button>
 
               {openFilter && (
                 <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-lg p-2 z-50">
-                  {["ALL", "ARTICLE", "AUDIO", "VIDEO"].map((type) => (
+                  {["ARTICLE", "AUDIO", "VIDEO"].map((type) => (
                     <button
                       key={type}
                       onClick={() => {
-                        setFilterType(type === "ALL" ? null : type);
+                        setFilterType(type);
                         setOpenFilter(false);
                       }}
                       className="w-full text-left px-2 py-1 text-xs text-[#797676] hover:bg-gray-100 rounded"
@@ -80,8 +95,7 @@ const Page = () => {
         </div>
       </div>
 
-      
-        <LibrayTable filterType={filterType} />
+      <LibrayTable filterType={filterType} />
     </div>
   );
 };

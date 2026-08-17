@@ -1,4 +1,5 @@
 
+import { verifyAuth } from "@/helper/auth";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
 import {
@@ -92,8 +93,21 @@ export async function GET(
   req: NextRequest
 ) {
   try {
-    /* ================= PAGINATION ================= */
+   
 
+    const user = await verifyAuth(req);
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        message: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+ /* ================= PAGINATION ================= */
     const { searchParams } =
       new URL(req.url);
 
@@ -134,44 +148,8 @@ export async function GET(
               },
             },
           },
-
-          // blog_media: true,
         },
       });
-
-    /* ================= FORMAT BLOGS ================= */
-
-    // const formattedBlogs =
-    //   await Promise.all(
-    //     blogs.map(
-    //       async (blog: Blog) => ({
-    //         ...blog,
-
-    //         blog_media:
-    //           await Promise.all(
-    //             blog.blog_media.map(
-    //               async (media) => ({
-    //                 ...media,
-    //             media_key: media.media_url,
-    //                 media_url:
-    //                   media.media_url
-    //                     ? await generateReadUrl(
-    //                         media.media_url
-    //                       )
-    //                     : null,
-    //                 thumbnail_key:media.thumbnail_url,
-    //                 thumbnail_url:
-    //               media.thumbnail_url
-    //                 ? await generateReadUrl(
-    //                     media.thumbnail_url
-    //                   )
-    //                 : null,
-    //               })
-    //             )
-    //           ),
-    //       })
-    //     )
-    //   );
 
     /* ================= RESPONSE ================= */
 
