@@ -6,103 +6,83 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
-/* ================= TYPES ================= */
+/* ================= REPORT ITEM ================= */
 
-export interface ReportUserProfile {
-  user_name: string;
-  first_name: string;
-  last_name: string;
-  profile_image: string | null;
-}
-
-export interface ReportUser {
+export interface ReportItem {
   id: string;
-  email_id: string;
-  users_profile: ReportUserProfile | null;
-}
 
-/* ================= POSTS ================= */
+  type: "POST" | "COMMENT";
 
-export interface ReportedPost {
-  id: string;
-  title: string;
-  description: string;
+  content: string;
+
   created_at: string;
 
-  users: ReportUser;
+  post_id?: string;
 
-  channels: {
-    id: string;
-    name: string;
-    description: string;
-  } | null;
-
-  post_reports: {
-    id: string;
-    reason: string;
-    created_at: string;
-    users: ReportUser;
-  }[];
-
-  _count: {
-    post_reports: number;
-  };
+  reportsCount: number;
 }
 
-/* ================= COMMENTS ================= */
+/* ================= PAGINATION ================= */
 
-export interface ReportedComment {
-  id: string;
-  comment: string;
-  created_at: string;
+export interface Pagination {
+  currentPage: number;
 
-  users: ReportUser;
+  limit: number;
 
-  posts: {
-    id: string;
-    title: string;
-    description: string;
-  };
+  total: number;
 
-  comment_reports: {
-    id: string;
-    reason: string;
-    created_at: string;
-    users: ReportUser;
-  }[];
+  totalPages: number;
 
-  _count: {
-    comment_reports: number;
-  };
+  hasNextPage: boolean;
+
+  hasPrevPage: boolean;
 }
 
 /* ================= API RESPONSE ================= */
 
 export interface ReportResponse {
   message: string;
-  data: {
-    posts: ReportedPost[];
-    comments: ReportedComment[];
-  };
+
+  data: ReportItem[];
+
+  pagination: Pagination;
 }
 
 /* ================= CONTEXT TYPE ================= */
 
 interface ReportContextType {
-  reportedPosts: ReportedPost[];
-  reportedComments: ReportedComment[];
+  reports: ReportItem[];
 
   loading: boolean;
+
   fetchReportedContent: () => Promise<void>;
+
+  /* ================= FILTER ================= */
+
+  filter: "ALL" | "POST" | "COMMENT" ;
+
+  setFilter: React.Dispatch<
+    React.SetStateAction<"ALL" | "POST" | "COMMENT">
+  >;
+
+  /* ================= PAGINATION ================= */
+
+  page: number;
+
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+
+  limit: number;
+
+  pagination: Pagination | null;
 }
 
 /* ================= CONTEXT ================= */
 
 const ReportContext = createContext<ReportContextType | undefined>(
-  undefined
+  undefined,
 );
 
 /* ================= PROVIDER ================= */
@@ -112,54 +92,102 @@ export function ReportedContentProvider({
 }: {
   children: ReactNode;
 }) {
-  const [reportedPosts, setReportedPosts] = useState<
-    ReportedPost[]
-  >([]);
-  const [reportedComments, setReportedComments] = useState<
-    ReportedComment[]
-  >([]);
+  const [reports, setReports] = useState<ReportItem[]>([]);
 
   const [loading, setLoading] = useState(false);
+
+  /* ================= FILTER ================= */
+
+  const [filter, setFilter] = useState<
+    "ALL" | "POST" | "COMMENT" 
+  >("ALL");
+
+  /* ================= PAGINATION ================= */
+
+  const [page, setPage] = useState(1);
+
+  const limit = 20;
+
+  const [pagination, setPagination] =
+    useState<Pagination | null>(null);
+
+  /* ================= FILTERED REPORTS ================= */
 
   /* ================= FETCH ================= */
 
   const fetchReportedContent = async () => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+
+    if (!token) return;
 
     try {
       setLoading(true);
 
+      let url = `/api/getAllReportedContent?page=${page}&limit=${limit}`;
+
+      /* ================= TYPE FILTER ================= */
+
+      if (filter ) {
+        url += `&type=${filter}`;
+      }
+
       const res = await axios.get<ReportResponse>(
-        "/api/getAllReportedContent",
+        url,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
-      console.log(res.data)
 
-      setReportedPosts(res.data.data.posts || []);
-      setReportedComments(res.data.data.comments || []);
-    } catch (error) {
-      console.log("Report fetch error:", error);
+      /* ================= SET DATA ================= */
+
+      setReports(res.data.data || []);
+
+      setPagination(res.data.pagination);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchReportedContent();
-  }, []);
+  /* ================= RETURN ================= */
 
   return (
     <ReportContext.Provider
       value={{
-        reportedPosts,
-        reportedComments,
+        reports,
+
         loading,
+
         fetchReportedContent,
+
+        /* FILTER */
+
+        filter,
+
+        setFilter,
+
+        /* PAGINATION */
+
+        page,
+
+        setPage,
+
+        limit,
+
+        pagination,
       }}
     >
       {children}
@@ -173,7 +201,9 @@ export function useReportedContent() {
   const ctx = useContext(ReportContext);
 
   if (!ctx) {
-    throw new Error("useReport must be used inside ReportedContentProvider");
+    throw new Error(
+      "useReportedContent must be used inside ReportedContentProvider",
+    );
   }
 
   return ctx;

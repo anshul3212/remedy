@@ -23,10 +23,19 @@
   }
 }
 
+
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+*:focus {
+    outline: none !important;
+}
+
+button{
+  cursor: pointer;
 }
 
 
@@ -39,6 +48,31 @@ body {
   scrollbar-width: none;
 }
 
+
+button:active {
+  transform: scale(0.9);
+  opacity: 80%;
+  transition: all;
+}
+
+button:hover {
+  opacity: 90%;
+  transition: all;
+}
+
+button:not(:disabled):hover {
+  /* opacity: 90%; */
+  transition: all;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+
+.jodit-wysiwyg li {
+  display: list-item !important;
+}
 
 .jodit-content ul {
   list-style-type: disc !important;
@@ -70,12 +104,9 @@ body {
 
 .jodit-wysiwyg p {
   font-size: 16px;
+  color: #3e3e3f;
+  font-weight: normal;
 }
-
-
-
-
-
 
 
 .jodit-container {
@@ -94,8 +125,79 @@ body {
   max-width: 100% !important;
 }
 
-.jodit-wysiwyg img {
-  max-width: 100% !important;
-  height: auto;
-  display: block;
+
+
+
+
+
+.ck p{
+  color: #000000;
+  font-size: 18px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+.ck h2{
+
+  font-size: 28px !important;
+  color: #000000;
+  font-family: var(--font-inter);
+}
+
+.ck h3{
+  color: #000000;
+  font-size: 24px;
+  font-family: var(--font-inter);
+}
+
+.ck h4{
+  color: #000000;
+  font-size: 20px;
+  font-family: var(--font-inter);
+}
+
+.ck p{
+  color: #070707;
+  font-size: 16px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+
+.ck ul{
+
+  padding-left: 24px !important;
+  margin-left: 12px !important;
+}
+.ck ol{
+  
+  padding-left: 24px !important;
+  margin-left: 12px !important;
+}
+
+.ck li{
+  color: #070707;
+  font-size: 16px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+
+.ck .ck-powered-by{
+  display: none;
+}
+
+.ck a{
+  color: #0e74fa;
+  font-size: 16px;
+}
+.ck.ck-editor__main > .ck-editor__editable{
+  background-color: var(--background)!important;
+  height: 300px !important;
+  font-family: var(--font-inter);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.ck.ck-editor__editable > .ck-placeholder::before {
+  color: #000000bf !important;
+  font-size: 14px;
+  font-weight: normal;
 }

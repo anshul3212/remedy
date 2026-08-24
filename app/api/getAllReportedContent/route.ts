@@ -1,14 +1,18 @@
-import { generateReadUrl } from "@/helper/awsUrl";
+
+
+import { verifyAuth } from "@/helper/auth";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-/* ================= COMMON CORS HEADERS ================= */
+/* ================= CORS HEADERS ================= */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods":
+    "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization",
 };
 
 /* ================= OPTIONS ================= */
@@ -19,287 +23,207 @@ export async function OPTIONS() {
     {
       status: 200,
       headers: corsHeaders,
-    },
+    }
   );
 }
 
-/* ================= GET REPORTED POSTS + COMMENTS ================= */
+/* ================= GET REPORTED CONTENT ================= */
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    /* ================= TRANSACTION ================= */
+    const user = await verifyAuth(req);
 
-    const [reportedPosts, reportedComments] =
-  await Promise.all([
-    prisma.posts.findMany({
-      where: {
-        post_reports: {
-          some: {},
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: "Unauthorized",
         },
-        is_active: true,
-      },
+        {
+          status: 401,
+        }
+      );
+    }
 
-      include: {
-        users: {
-          select: {
-            id: true,
-            email_id: true,
+    /* ================= PAGINATION + FILTER ================= */
 
-            users_profile: {
-              select: {
-                user_name: true,
-                first_name: true,
-                last_name: true,
-                profile_image: true,
-              },
+    const { searchParams } = new URL(req.url);
+
+    const page = Math.max(
+      parseInt(searchParams.get("page") || "1"),
+      1
+    );
+
+    const limit = Math.max(
+      parseInt(searchParams.get("limit") || "10"),
+      1
+    );
+
+    const type = (
+      searchParams.get("type") || "ALL"
+    ).toUpperCase();
+
+    /* ================= FETCH POSTS ================= */
+
+    let formattedPosts: any[] = [];
+
+    if (type === "ALL" || type === "POST") {
+      const reportedPosts =
+        await prisma.posts.findMany({
+          where: {
+            post_reports: {
+              some: {},
             },
+
+            is_active: true,
           },
-        },
 
-        channels: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-          },
-        },
-
-        post_media: {
-          select: {
-            id: true,
-            media_url: true,
-            media_type: true,
-          },
-        },
-
-        post_reports: {
-          include: {
-            users: {
-              select: {
-                id: true,
-                email_id: true,
-
-                users_profile: {
-                  select: {
-                    user_name: true,
-                    first_name: true,
-                    last_name: true,
-                    profile_image: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-
-        _count: {
-          select: {
-            post_reports: true,
-          },
-        },
-      },
-    }),
-
-    prisma.comments.findMany({
-      where: {
-        comment_reports: {
-          some: {},
-        },
-      },
-
-      include: {
-        users: {
-          select: {
-            id: true,
-            email_id: true,
-
-            users_profile: {
-              select: {
-                user_name: true,
-                first_name: true,
-                last_name: true,
-                profile_image: true,
-              },
-            },
-          },
-        },
-
-        posts: {
           select: {
             id: true,
             title: true,
-            description: true,
-          },
-        },
+            created_at: true,
 
-        comment_reports: {
-          include: {
-            users: {
+            _count: {
               select: {
-                id: true,
-                email_id: true,
-
-                users_profile: {
-                  select: {
-                    user_name: true,
-                    first_name: true,
-                    last_name: true,
-                    profile_image: true,
-                  },
-                },
+                post_reports: true,
               },
             },
           },
-        },
+        });
 
-        _count: {
-          select: {
-            comment_reports: true,
+      formattedPosts = reportedPosts.map(
+        (post) => ({
+          id: post.id,
+
+          type: "POST",
+
+          content: post.title,
+
+          created_at: post.created_at,
+
+          reportsCount:
+            post._count.post_reports,
+        })
+      );
+    }
+
+    /* ================= FETCH COMMENTS ================= */
+
+    let formattedComments: any[] = [];
+
+    if (type === "ALL" || type === "COMMENT") {
+      const reportedComments =
+        await prisma.comments.findMany({
+          where: {
+            comment_reports: {
+              some: {},
+            },
           },
-        },
-      },
-    }),
-  ]);
 
-    /* ================= FORMAT POSTS ================= */
+          select: {
+            id: true,
+            comment: true,
+            created_at: true,
+            post_id: true,
 
-    const formattedPosts = await Promise.all(
-      reportedPosts.map(async (post) => ({
-        ...post,
-
-        /* ================= POST MEDIA ================= */
-
-        post_media: await Promise.all(
-          post.post_media.map(async (media) => ({
-            ...media,
-
-            media_url: media.media_url
-              ? await generateReadUrl(media.media_url)
-              : null,
-          })),
-        ),
-
-        /* ================= POST OWNER PROFILE ================= */
-
-        users: {
-          ...post.users,
-
-          users_profile: post.users.users_profile
-            ? {
-                ...post.users.users_profile,
-
-                profile_image: post.users.users_profile.profile_image
-                  ? await generateReadUrl(
-                      post.users.users_profile.profile_image,
-                    )
-                  : null,
-              }
-            : null,
-        },
-
-        /* ================= REPORT USERS PROFILE ================= */
-
-        post_reports: await Promise.all(
-          post.post_reports.map(async (report) => ({
-            ...report,
-
-            users: {
-              ...report.users,
-
-              users_profile: report.users.users_profile
-                ? {
-                    ...report.users.users_profile,
-
-                    profile_image: report.users.users_profile.profile_image
-                      ? await generateReadUrl(
-                          report.users.users_profile.profile_image,
-                        )
-                      : null,
-                  }
-                : null,
+            _count: {
+              select: {
+                comment_reports: true,
+              },
             },
-          })),
-        ),
-      })),
+          },
+        });
+
+      formattedComments =
+        reportedComments.map(
+          (comment) => ({
+            id: comment.id,
+
+            type: "COMMENT",
+
+            post_id: comment.post_id,
+
+            content: comment.comment,
+
+            created_at:
+              comment.created_at,
+
+            reportsCount:
+              comment._count
+                .comment_reports,
+          })
+        );
+    }
+
+    /* ================= MERGE + SORT ================= */
+
+    const mergedData = [
+      ...formattedPosts,
+      ...formattedComments,
+    ].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
     );
 
-    /* ================= FORMAT COMMENTS ================= */
+    /* ================= PAGINATION ================= */
 
-    const formattedComments = await Promise.all(
-      reportedComments.map(async (comment) => ({
-        ...comment,
+    const total = mergedData.length;
 
-        /* ================= COMMENT OWNER PROFILE ================= */
+    const totalPages =
+      Math.ceil(total / limit);
 
-        users: {
-          ...comment.users,
+    const startIndex =
+      (page - 1) * limit;
 
-          users_profile: comment.users.users_profile
-            ? {
-                ...comment.users.users_profile,
-
-                profile_image: comment.users.users_profile.profile_image
-                  ? await generateReadUrl(
-                      comment.users.users_profile.profile_image,
-                    )
-                  : null,
-              }
-            : null,
-        },
-
-        /* ================= REPORT USERS PROFILE ================= */
-
-        comment_reports: await Promise.all(
-          comment.comment_reports.map(async (report) => ({
-            ...report,
-
-            users: {
-              ...report.users,
-
-              users_profile: report.users.users_profile
-                ? {
-                    ...report.users.users_profile,
-
-                    profile_image: report.users.users_profile.profile_image
-                      ? await generateReadUrl(
-                          report.users.users_profile.profile_image,
-                        )
-                      : null,
-                  }
-                : null,
-            },
-          })),
-        ),
-      })),
-    );
+    const paginatedData =
+      mergedData.slice(
+        startIndex,
+        startIndex + limit
+      );
 
     /* ================= RESPONSE ================= */
 
     return NextResponse.json(
       {
-        message: "all reported posts and comments found",
+        message:
+          "all reported content found",
 
-        data: {
-          posts: serialize(formattedPosts),
-          comments: serialize(formattedComments),
+        data: serialize(
+          paginatedData
+        ),
+
+        pagination: {
+          currentPage: page,
+
+          limit,
+
+          total,
+
+          totalPages,
+
+          hasNextPage:
+            page < totalPages,
+
+          hasPrevPage:
+            page > 1,
         },
       },
       {
         status: 200,
         headers: corsHeaders,
-      },
+      }
     );
   } catch (err) {
-    console.error(err);
 
     return NextResponse.json(
       {
-        message: "Internal Server Error",
+        message:
+          "Internal Server Error",
       },
       {
         status: 500,
         headers: corsHeaders,
-      },
+      }
     );
   }
 }

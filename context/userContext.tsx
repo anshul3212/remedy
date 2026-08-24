@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import axios from "axios";
@@ -6,8 +8,8 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
@@ -19,89 +21,116 @@ export interface User {
   condition?: string;
   status?: "active" | "inactive";
   joined?: string;
+  profile_image?: string;
 }
-
-
 
 interface UserContextType {
   users: User[];
-  selectedUser: User | null;
-  selectUser: (id: number) => void;
-  clearSelected: () => void;
-  addUser: (user: User) => void;
-  removeUser: (id: number) => void;
-  updateUser: (user: User) => void;
-  totalUsers:number;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchUsers: () => Promise<void>;
+
+  /* ✅ PAGINATION */
+  page: number;
+  total: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  limit: number;
+  totalPages: number;
 }
 
 /* ================= CONTEXT ================= */
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>(
+  undefined
+);
 
 /* ================= PROVIDER ================= */
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [totalUsers, setTotalUsers] = useState(0);
+export function UserProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+    const [users, setUsers] = useState<User[]>([]);
 
   
-   useEffect(() => {
-  const usersData = async () => {
-    try {
-      const res = await axios.get("/api/getAllUsers");
-      const formattedUsers = res.data.users.map((u: any) => ({
-      id: Number(u.id),
-      uuid: u.uuid,
-      email: u.email_id,
-      name: `${u.users_profile?.first_name} ${u.users_profile?.last_name}`,
-      condition: "NAN", 
-      status: u.is_active ? "active" : "inactive",
-      joined: new Date(u.created_at).toLocaleDateString(),
-    }));
 
-      setUsers(formattedUsers);
-      setTotalUsers(res.data.totalUsers);
+  const [loading, setLoading] = useState(false);
 
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
+  /* ================= PAGINATION ================= */
+  const [total, setTotal] = useState(0);
 
-  usersData();
-}, []);
-  /* ---------- CRUD ---------- */
+  const [page, setPage] = useState(1);
 
-  const addUser = (user: User) => {
-    setUsers((prev) => [...prev, user]);
-  };
+  const limit = 20;
 
-  const removeUser = (id: number) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+  const totalPages = Math.ceil(total / limit);
 
-    // if deleted user is selected → clear
-    setSelectedUser((prev) => (prev?.id === id ? null : prev));
-  };
+  /* ================= FETCH USERS ================= */
 
-  const updateUser = (updatedUser: User) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-    );
+    const fetchUsers= async () => {
+      try {
+        setLoading(true);
+        const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
-    // keep selected user in sync
-    setSelectedUser((prev) =>
-      prev?.id === updatedUser.id ? updatedUser : prev
-    );
-  };
+        const res = await axios.get(
+          `/api/getAllUsers?page=${page}&limit=${limit}`,
+          {
+          headers: {
+            Authorization: `Bearer ${token}`,
 
-  /* ---------- SELECT ---------- */
+            "Content-Type": "application/json",
+          },
+        },
+        );
 
-  const selectUser = (id: number) => {
-    const found = users.find((u) => u.id === id) || null;
-    setSelectedUser(found);
-  };
 
-  const clearSelected = () => setSelectedUser(null);
+        const formattedUsers = res.data.users.map(
+          (u: any) => ({
+            id: Number(u.id),
+
+            uuid: u.uuid,
+
+            email: u.email_id,
+
+            name: `${u.users_profile?.first_name || ""} ${
+              u.users_profile?.last_name || ""
+            }`,
+
+            condition: "NAN",
+
+            status: u.is_active
+              ? "active"
+              : "inactive",
+
+            joined: new Date(
+              u.created_at
+            ).toLocaleDateString(),
+
+            profile_image:
+              u.users_profile?.profile_image,
+          })
+        );
+
+        setUsers(formattedUsers);
+        setTotal(
+          res.data.pagination.totalUsers
+        );
+      } catch (error: any) {
+        const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error.message ||
+                "Something went wrong";
+              toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   /* ---------- PROVIDER ---------- */
 
@@ -109,13 +138,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider
       value={{
         users,
-        totalUsers,
-        selectedUser,
-        selectUser,
-        clearSelected,
-        addUser,
-        removeUser,
-        updateUser,
+        loading,
+        setLoading,
+        fetchUsers,
+
+
+        /* ✅ PAGINATION */
+        page,
+        limit,
+        totalPages,
+        setPage,
+        total
       }}
     >
       {children}
@@ -127,8 +160,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 export function useUser() {
   const ctx = useContext(UserContext);
+
   if (!ctx) {
-    throw new Error("useUser must be used inside UserProvider");
+    throw new Error(
+      "useUser must be used inside UserProvider"
+    );
   }
+
   return ctx;
 }

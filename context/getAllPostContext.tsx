@@ -6,47 +6,17 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
 } from "react";
+import toast from "react-hot-toast";
 
 /* ================= TYPES ================= */
 
-export interface UserProfile {
-  user_name: string;
-  first_name: string;
-  last_name: string;
-  profile_image: string | null;
-}
 
-export interface User {
-  id: string;
-  email_id: string;
-  users_profile: UserProfile | null;
-}
-
-export interface Channel {
-  id: string;
-  name: string;
-  description: string;
-}
 
 export interface PostMedia {
   id: string;
   media_url: string;
   media_type: string;
-}
-
-export interface PostReport {
-  id: string;
-  post_id: string;
-  user_id: string;
-  reason: string;
-  created_at: string;
-  users: User;
-}
-
-export interface ReportCount {
-  post_reports: number;
 }
 
 export interface Post {
@@ -66,12 +36,17 @@ export interface Post {
 
   created_at: string;
   updated_at: string;
+}
 
-  users: User;
-  channels: Channel | null;
-  post_media: PostMedia[];
-  post_reports: PostReport[];
-  _count: ReportCount;
+/* ================= PAGINATION ================= */
+
+export interface Pagination {
+  currentPage: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 /* ================= API RESPONSE ================= */
@@ -79,20 +54,45 @@ export interface Post {
 export interface PostResponse {
   message: string;
   post: Post[];
+  pagination: Pagination;
 }
 
 /* ================= CONTEXT TYPE ================= */
 
 interface PostContextType {
   posts: Post[];
-  fetchPosts: () => Promise<void>;
+
+  fetchPosts: (pageNumber?: number) => Promise<void>;
+
   loading: boolean;
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+
+  loadingMore: boolean;
+
+  setLoading: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
+
+  /* ================= PAGINATION ================= */
+
+  page: number;
+
+  setPage: React.Dispatch<
+    React.SetStateAction<number>
+  >;
+
+  limit: number;
+
+  pagination: Pagination | null;
+
+  hasNextPage: boolean;
 }
 
 /* ================= CONTEXT ================= */
 
-const PostContext = createContext<PostContextType | undefined>(undefined);
+const PostContext =
+  createContext<PostContextType | undefined>(
+    undefined
+  );
 
 /* ================= PROVIDER ================= */
 
@@ -102,45 +102,123 @@ export function PostProvider({
   children: ReactNode;
 }) {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [loadingMore, setLoadingMore] =
+    useState(false);
+
+  /* ================= PAGINATION ================= */
+
+  const [page, setPage] = useState(1);
+
+  const limit = 20;
+
+  const [pagination, setPagination] =
+    useState<Pagination | null>(null);
 
   /* ================= FETCH POSTS ================= */
 
-  const fetchPosts = async () => {
-    const token = localStorage.getItem("token");
+  const fetchPosts = async (
+    pageNumber: number = 1
+  ) => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) =>
+        row.startsWith("admin-token=")
+      )
+      ?.split("=")[1];
+
+    if (!token) return;
 
     try {
-      setLoading(true);
+      /* ================= LOADING ================= */
 
-      const res = await axios.get<PostResponse>(
-        "/api/getAllPosts",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      if (pageNumber === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      /* ================= API ================= */
+
+      const res =
+        await axios.get<PostResponse>(
+          `/api/getAllPosts?page=${pageNumber}&limit=${limit}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      const newPosts =
+        res.data.post || [];
+
+      /* ================= POSTS ================= */
+
+      if (pageNumber === 1) {
+        // First page → replace
+        setPosts(newPosts);
+      } else {
+        // Next page → append
+        setPosts((prev) => [
+          ...prev,
+          ...newPosts,
+        ]);
+      }
+
+      /* ================= PAGINATION ================= */
+
+      setPagination(
+        res.data.pagination
       );
 
-      setPosts(res.data.post || []);
-    } catch (error) {
-      console.log("Post fetch error:", error);
+      setPage(pageNumber);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
+
+      toast.error(message);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  /* ================= HAS NEXT PAGE ================= */
+
+  const hasNextPage =
+    pagination?.hasNextPage ?? true;
 
   return (
     <PostContext.Provider
       value={{
         posts,
+
         fetchPosts,
+
         loading,
+
+        loadingMore,
+
         setLoading,
+
+        page,
+
+        setPage,
+
+        limit,
+
+        pagination,
+
+        hasNextPage,
       }}
     >
       {children}
@@ -154,7 +232,9 @@ export function usePost() {
   const ctx = useContext(PostContext);
 
   if (!ctx) {
-    throw new Error("usePost must be used inside PostProvider");
+    throw new Error(
+      "usePost must be used inside PostProvider"
+    );
   }
 
   return ctx;

@@ -3,59 +3,49 @@
 import "../globals.css";
 import SideBar from "@/components/dashComponents/sideBar";
 import DashTop from "@/components/common/nav";
-import { useState } from "react";
 import { UserProvider } from "@/context/userContext";
 import { BlogProvider } from "@/context/blogContext";
-import { ReportProvider } from "@/context/reportPostContext";
 import { ChannelProvider } from "@/context/channelContext";
 import { ReportedContentProvider } from "@/context/reportedContentContext";
 import { PostProvider } from "@/context/getAllPostContext";
-
+import { HelpSupportProvider } from "@/context/helpSupportContext";
+import { useRouter } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 
 export default function DashLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-    const [collapsed, setCollapsed] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [openSidebar, setOpenSidebar] = useState(false);
+  const router = useRouter();
 
   return (
-    <PostProvider>
-<ReportedContentProvider>
-<ChannelProvider>
-    <ReportProvider>
-    <BlogProvider>
-<UserProvider>
-    <div className="flex w-screen h-screen">
-  <div
-    className={`transition-all duration-300 ${
-      collapsed ? "lg:w-25" : "lg:w-90"
-    }`}
-  >
-    <SideBar
-      openSidebar={openSidebar}
-      setOpenSidebar={setOpenSidebar}
-      collapsed={collapsed}
-      setCollapsed={setCollapsed}
-    />
-  </div>
+    <HelpSupportProvider>
+      <PostProvider>
+        <ReportedContentProvider>
+          <ChannelProvider>
+            <BlogProvider>
+              <UserProvider>
+                <div className="flex w-screen h-screen text-black">
+                  <div className="flex w-screen h-screen text-black">
+                    <div className="min-w-70">
+                      <SideBar />
+                    </div>
 
-  <div className="flex-1 text-black">
-    <DashTop
-    collapsed={collapsed}
-      setCollapsed={setCollapsed}
-      setOpenSidebar={setOpenSidebar}
-    />
-    {children}
-  </div>
-</div>
-</UserProvider>
-</BlogProvider>
-</ReportProvider>
-</ChannelProvider>
-</ReportedContentProvider>
-</PostProvider>
+                    <div className="flex-1 flex flex-col overflow-hidden ">
+                      <DashTop />
+                      <div className="bg-[#f7f7fe] h-full w-full">
+                        {children}
+                      </div>
+                    </div>
+                  </div>
+                  <Toaster />
+                </div>
+              </UserProvider>
+            </BlogProvider>
+          </ChannelProvider>
+        </ReportedContentProvider>
+      </PostProvider>
+    </HelpSupportProvider>
   );
 }

@@ -1,30 +1,58 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
 
-  response.headers.set("Access-Control-Allow-Origin", "*");
-  response.headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
+import { NextRequest, NextResponse } from "next/server";
 
-  response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
+export function middleware(req: NextRequest) {
+  /* ================= TOKEN ================= */
 
-  if (request.method === "OPTIONS") {
-    return new NextResponse(null, {
-      status: 200,
-      headers: response.headers,
-    });
+  const token =
+    req.cookies.get("admin-token")?.value;
+
+  /* ================= CURRENT PATH ================= */
+
+  const { pathname } = req.nextUrl;
+
+  /* ================= PUBLIC ROUTES ================= */
+
+  const publicRoutes = [
+    "/login",
+    "/forget-password",
+    "/logo.png"
+  ];
+
+  const isPublicRoute =
+    publicRoutes.includes(pathname);
+
+  /* ================= REDIRECT TO LOGIN ================= */
+
+  if (!token && !isPublicRoute) {
+    return NextResponse.redirect(
+      new URL("/login", req.url)
+    );
   }
 
-  return response;
+  /* ================= REDIRECT LOGGED USER ================= */
+
+  if (token && pathname === "/login") {
+    return NextResponse.redirect(
+      new URL("/users", req.url)
+    );
+  }
+
+  return NextResponse.next();
 }
 
+/* ================= MATCHER ================= */
+
 export const config = {
-  matcher: "/api/:path*",
+  matcher: [
+    /*
+      Exclude:
+      - api
+      - _next
+      - favicon
+      - static files
+    */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
