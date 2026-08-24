@@ -11,15 +11,51 @@ import {
   User2,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
 
-const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:string; image:string }) => {
+const DashTop = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [adminImage, setAdminImage] = useState("");
   const notifRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
+
+useEffect(() => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
+    const getAdmin = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`/api/getAdmin`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        setAdminName(res.data.admin.full_name);
+        setAdminImage(res.data.admin.profile_image);
+      } catch (error: any) {
+        document.cookie =
+          "admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAdmin();
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -76,14 +112,14 @@ const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:str
   return (
     <div className="bg-[#fbfaff] h-24 border-[#eee7e7] border-b flex items-center justify-between  w-full relative px-4">
       <div className="flex items-center gap-4 ">
-        <div
+        {/* <div
           className={`cursor-pointer bg-[linear-gradient(280.07deg,#A34E25_0%,#734C82_65%,#522762_100%)] rounded-full p-2 lg:hidden`}
           onClick={() => setOpenSidebar(true)}
         >
           <ArrowLeft color="#ffffff" size={14} />
-        </div>
+        </div> */}
 
-        <div className="bg-[#f6f6f9] flex items-center px-2 rounded-sm border border-[#30384F29] ">
+        {/* <div className="bg-[#f6f6f9] flex items-center px-2 rounded-sm border border-[#30384F29] ">
           <Search color="#ADB5BD" className="cursor-pointer" />
           <input
             type="text"
@@ -92,7 +128,7 @@ const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:str
             onChange={(e) => setSearch(e.target.value)}
             className="px-6 text-[#000000bf] placeholder:text-[#ADB5BD]  font-inter font-normal text-sm  h-12 w-86 outline-none"
           />
-        </div>
+        </div> */}
       </div>
    
 
@@ -103,9 +139,9 @@ const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:str
           >
             <div className="flex items-center gap-4 ">
               <div className="w-16 h-16 rounded-full overflow-hidden relative">
-                {image ? (
+                {adminImage ? (
                   <Image
-                    src={image}
+                    src={adminImage}
                     alt="profile"
                     fill
                     unoptimized
@@ -121,7 +157,7 @@ const DashTop = ({ setOpenSidebar,name,image }: { setOpenSidebar?: any; name:str
 
               <div className="flex flex-col">
                 <span className="text-[#000000] font-inter  font-normal text-sm capitalize">
-                  {name}
+                  {adminName}
                 </span>
                 <span className="text-[#667085] font-inter  font-medium text-[12px] capitalize">
                   Admin

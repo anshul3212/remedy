@@ -48,7 +48,11 @@ export async function GET(req: NextRequest) {
     
         _count: {
           select: {
-            posts: true,
+            posts: {
+      where: {
+        is_active:true
+      },
+    },
           },
         },
 

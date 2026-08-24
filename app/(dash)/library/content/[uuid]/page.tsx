@@ -2,13 +2,20 @@
 
 import ImageResize from "@/components/ui/imageResize";
 import Input from "@/components/ui/input";
-import TextEditor from "@/components/ui/textArea";
+import dynamic from "next/dynamic";
+// import TextEditor from "@/components/ui/textArea";
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { ChevronDown } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import Loader from "@/components/ui/loaders/loader";
+
+const TextEditor = dynamic(() => import("@/components/ui/textArea"), {
+  ssr: false,
+  loading: () => <p></p>,
+});
 
 const mediaTypeMap: Record<string, string> = {
   IMAGE: "ARTICLE",
@@ -19,21 +26,27 @@ const mediaTypeMap: Record<string, string> = {
 const Page = () => {
   const { uuid } = useParams();
 
-  const { category, fetchBlogs, media, setMedia } = useBlog();
+  const { category, fetchBlogs, media, setMedia, fetchCategories } = useBlog();
 
   const [blog, setBlog] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [readTime, setReadTime] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+
+  useEffect(()=>{
+  fetchCategories();
+},[])
 
   /* ================= FETCH BLOG ================= */
   const fetchBlogById = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("admin-token="))
@@ -149,7 +162,7 @@ const Page = () => {
       return;
     }
     try {
-      setLoading(true);
+      setUpdateLoading(true);
 
       const token = document.cookie
         .split("; ")
@@ -207,9 +220,7 @@ const Page = () => {
 
         payload.media = [
           {
-            media_url: media.media_url,
-
-            // IMPORTANT
+            media_url: media.media_key,
             media_key: media.media_key || oldMedia?.media_key,
 
             media_type: media.media_type || oldMedia?.media_type,
@@ -239,10 +250,8 @@ const Page = () => {
           },
         },
       );
-
-      await fetchBlogById();
       toast.success("Blog Updated successfully");
-      await fetchBlogs();
+      router.push("/library")
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
@@ -252,16 +261,14 @@ const Page = () => {
 
       toast.error(message);
     } finally {
-      setLoading(false);
+      setUpdateLoading(false);
     }
   };
-  /* ================= UI ================= */
+ /* ================= UI ================= */
   return (
     <>
       {loading ? (
-        <div className="flex items-center justify-center w-[80%] h-[80%]">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-        </div>
+        <Loader/>
       ) : (
         <div className="font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]">
           <h2 className="text-[20px] font-medium">Blog Details</h2>
@@ -269,20 +276,18 @@ const Page = () => {
           <div className="flex gap-4 h-[80%]">
             <div className="w-[70%] border rounded-xl p-4">
               <ImageResize
-                initialMedia={
-                  media?.media_url
-                    ? {
-                        media_url: blog?.blog_media?.[0]?.media_url,
-                        media_key: blog?.blog_media?.[0]?.media_key,
-                        media_type: blog?.blog_media?.[0]?.media_type,
-                        thumbnail_url:
-                          blog?.blog_media?.[0]?.thumbnail_url || "",
-                        thumbnail_key:
-                          blog?.blog_media?.[0]?.thumbnail_key || "",
-                      }
-                    : undefined
-                }
-              />
+  initialMedia={
+    blog?.blog_media?.[0]?.media_url
+      ? {
+          media_url: blog.blog_media[0].media_url,
+          media_key: blog.blog_media[0].media_key,
+          media_type: blog.blog_media[0].media_type,
+          thumbnail_url: blog.blog_media[0].thumbnail_url || "",
+          thumbnail_key: blog.blog_media[0].thumbnail_key || "",
+        }
+      : undefined
+  }
+/>
             </div>
 
             <div className="w-[30%] flex flex-col gap-4">
@@ -299,7 +304,7 @@ const Page = () => {
                             selectedCategories.includes(Number(c.id)),
                           )
                           .map((c) => c.name.replace(/_/g, " "))
-                          .join(", ")
+                          .join(" | ")
                       : "Please select categories"}
                   </span>
 
@@ -339,7 +344,6 @@ const Page = () => {
                 type="text"
                 value={readTime}
                 onChange={(e: any) => setReadTime(e.target.value)}
-                width="w-[30%]"
               />
             </div>
           </div>
@@ -348,9 +352,10 @@ const Page = () => {
 
           <button
             onClick={updateBlog}
-            className="text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer"
+            disabled={updateLoading}
+            className={`text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer ${updateLoading ?"opacity-50 cursor-not-allowed":"opacity-100"}`}
           >
-            Update
+            {updateLoading?"Updating":"Update"} 
           </button>
         </div>
       )}

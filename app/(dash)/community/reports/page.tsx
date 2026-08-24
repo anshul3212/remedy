@@ -1,8 +1,8 @@
 "use client";
 
-import { Eye, TextAlignStart, X } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useReportedContent } from "@/context/reportedContentContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { formatNumber } from "@/helper/convertNumber";
 import FilterSelector from "@/components/ui/filter";
@@ -40,13 +40,24 @@ export default function ReportTable() {
   const totalPages = pagination?.totalPages || 0;
   const router = useRouter();
 
-    useEffect(() => {
-    fetchReportedContent();
-  }, [page,filter]);
+  useEffect(() => {
+  setFilter("ALL");
+  setPage(1);
+}, []);
 
-   useEffect(() => {
-      setPage(1);
-    }, [filter]);
+useEffect(() => {
+  fetchReportedContent();
+}, [page, filter]);
+
+  //   useEffect(() => {
+  //   fetchReportedContent();
+  // }, [page,filter]);
+
+  
+
+  //  useEffect(() => {
+  //     setPage(1);
+  //   }, [filter]);
   /* ================= PAGINATION ================= */
 
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;

@@ -37,6 +37,8 @@ export interface HelpSupport {
 interface HelpSupportContextType {
   helps: HelpSupport[];
 
+  fetchHelp: () => Promise<void>;
+
   totalHelps: number; 
 
   loading: boolean;
@@ -87,7 +89,7 @@ export function HelpSupportProvider({
   /* ================= FETCH DATA ================= */
 
   
-    const fetchHelpData = async () => {
+    const fetchHelp = async () => {
       try {
         setLoading(true);
         const token = document.cookie
@@ -162,7 +164,7 @@ export function HelpSupportProvider({
 
 
 // useEffect(() => {
-//     fetchHelpData();
+//     fetchHelp();
 //   }, [page]);
 
  
@@ -176,7 +178,7 @@ export function HelpSupportProvider({
       value={{
         helps,
 
-
+fetchHelp,
         totalHelps,
 
         loading,

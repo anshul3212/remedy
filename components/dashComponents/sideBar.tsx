@@ -362,20 +362,20 @@ export default function SideBar({
         <CirclePile size={18} color="#ADB5BD"/>
       ),
     },
-    {
-      text: "Subscription Management",
-      route: "/subscription",
-      icon: (
-        <HandCoins size={18} color="#ADB5BD"/>
-      ),
-    },
-    {
-      text: "Help & Support",
-      route: "/help",
-      icon: (
-        <HeartHandshake  size={18} color="#ADB5BD"/>
-      ),
-    },
+    // {
+    //   text: "Subscription Management",
+    //   route: "/subscription",
+    //   icon: (
+    //     <HandCoins size={18} color="#ADB5BD"/>
+    //   ),
+    // },
+    // {
+    //   text: "Help & Support",
+    //   route: "/help",
+    //   icon: (
+    //     <HeartHandshake  size={18} color="#ADB5BD"/>
+    //   ),
+    // },
   ];
 
   const SidebarContent = (

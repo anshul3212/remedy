@@ -40,6 +40,7 @@ export interface Channel {
   total_members: number;
   created_at: string;
   updated_at: string;
+  is_active:boolean;
   users:any;
   channel_members: ChannelMember[];
 
@@ -167,11 +168,6 @@ export function ChannelProvider({
     }
   };
 
-  /* ================= INIT ================= */
-
-  // useEffect(() => {
-  //   fetchChannels();
-  // }, [page]);
 
   return (
     <ChannelContext.Provider

@@ -1,5 +1,6 @@
 "use client";
 
+import FilterSelector from "@/components/ui/filter";
 import axios from "axios";
 import {
   createContext,
@@ -132,6 +133,12 @@ interface BlogContextType {
 
   setLoading: Dispatch<SetStateAction<boolean>>;
 
+  filter: "ALL" | "AUDIO" | "VIDEO" | "ARTICLE" | "OTHER" ;
+
+  setFilter: React.Dispatch<
+    React.SetStateAction<"ALL" | "AUDIO" | "VIDEO" | "ARTICLE" | "OTHER">
+  >;
+
   /* ================= PAGINATION ================= */
 
   page: number;
@@ -164,6 +171,10 @@ export function BlogProvider({ children }: { children: ReactNode }) {
 
   const [loading, setLoading] = useState(false);
 
+  const [filter, setFilter] = useState<
+    "ALL" | "ARTICLE" | "VIDEO" | "AUDIO" | "OTHER"
+  >("ALL");
+
   /* ================= PAGINATION ================= */
 
   const [page, setPage] = useState(1);
@@ -175,17 +186,23 @@ export function BlogProvider({ children }: { children: ReactNode }) {
   /* ================= FETCH BLOGS ================= */
 
   const fetchBlogs = async (): Promise<void> => {
-    try {
-      setLoading(true);
-
-      const token = document.cookie
+    const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("admin-token="))
         ?.split("=")[1];
       if (!token) return;
+    try {
+      setLoading(true);
+
+    
+      let url =`/api/getAllBlogs?page=${page}&limit=${limit}`
+
+      if (filter&& filter!=="ALL") {
+        url += `&type=${filter}`;
+      }
 
       const res = await axios.get<BlogResponse>(
-        `/api/getAllBlogs?page=${page}&limit=${limit}`,
+        url,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -289,6 +306,10 @@ export function BlogProvider({ children }: { children: ReactNode }) {
         loading,
 
         setLoading,
+
+        filter,
+
+        setFilter,
 
         /* ================= PAGINATION ================= */
 

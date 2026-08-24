@@ -6,12 +6,14 @@ import {
   Heart,
   MessageSquare,
   Trash,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Loader from "@/components/ui/loaders/loader";
+import DeleteModal from "@/components/ui/deleteModal";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 const Page = () => {
   const {
@@ -34,7 +36,6 @@ const Page = () => {
   const [columnCount, setColumnCount] = useState(4);
   const [openModal, setOpenModal] = useState(false);
   const [selectedMediaId,setSelectedMediaId] = useState<number|null>(null)
-    const [name, setName] = useState("");
 
   /* ================= RESPONSIVE COLUMNS ================= */
 
@@ -141,6 +142,39 @@ const Page = () => {
     }
   };
 
+
+  const deletePost = async (
+  postId: string,
+  reason: string
+) => {
+  const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("admin-token="))
+    ?.split("=")[1];
+
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+ const res =  await axios.post(
+    `${process.env.NEXT_PUBLIC_DEV_URL}/admin/community/remove-post`,
+    {
+          post_id: postId,
+          remove_reason: reason,
+        },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  toast.success("Post deleted");
+
+  setSelectedMediaId(null);
+
+  await fetchPosts(1);
+};
+ 
   /* ================= UI ================= */
 
   return (
@@ -263,7 +297,7 @@ const Page = () => {
                               className="cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedMediaId(media.id);
+                                setSelectedMediaId(post.id);
                                 setOpenModal(true);
                               }}
                             />
@@ -286,60 +320,13 @@ const Page = () => {
           )}
 
           {/* delete modal */}
-          {openModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="shadow-md bg-[white] border border-[#787878] rounded-2xl w-155.75 p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[18px] font-normal text-[black] font-inter">
-               Please Specify Deleting Reason
-              </h2>
-              <X
-                color="black"
-                size={23}
-                onClick={() => {
-                  setOpenModal(false);
-                  setSelectedMediaId(null)
-                  setName("");
-                }}
-                className="cursor-pointer"
-              />
-            </div>
-
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter Reason"
-              className="w-full border border-[#7d7d7d] p-2 rounded-md text-sm outline-none h-12"
-            />
-
-            <div className="flex justify-end gap-2">
-              {/* Cancel Button */}
-              <button
-                onClick={() => {
-                  setOpenModal(false);
-                  setSelectedMediaId(null)
-                  setName("");
-                }}
-                className="px-4 py-2 text-sm border border-[#7d7d7d] rounded-sm font-inter text-[12px] font-medium text-[#242323] min-w-35.75"
-              >
-                Cancel
-              </button>
-
-              {/* Add Button */}
-              <button
-                disabled={!name.trim()}
-                onClick={() => {
-                  console.log(`deleted-${selectedMediaId}`)
-                }}
-                className={`px-4 py-2 text-sm rounded-sm font-inter text-[12px] font-medium text-[white] bg-red-500 cursor-pointer min-w-35.75 ${!name.trim() || loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-              >
-                {!loading ? "Delete" : "Deleting"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          {openModal && selectedMediaId !== null && (
+  <DeleteModal
+    id={String(selectedMediaId)}
+    setOpenModal={setOpenModal}
+    onDelete={deletePost}
+  />
+)}
         </div>
       )}
     </>

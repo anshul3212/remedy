@@ -5,9 +5,11 @@
 import { useState, useEffect, useRef } from "react";
 import { User2, ChevronDown, Eye } from "lucide-react";
 import { formatNumber } from "@/helper/convertNumber";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import Image from "next/image";
 import { useHelpSupport } from "@/context/helpSupportContext";
+import Loader from "./loaders/loader";
+import { TableLoader } from "./loaders/tableLoader";
 
 const statusOptions = [
   {
@@ -54,6 +56,7 @@ export default function HelpTable() {
     limit,
     totalPages,
     totalHelps,
+    fetchHelp
   } = useHelpSupport();
 
   const [selectedQuery, setSelectedQuery] =
@@ -72,6 +75,14 @@ export default function HelpTable() {
       [id]: value,
     }));
   };
+
+  useEffect(()=>{
+    fetchHelp()
+  },[page])
+
+  useEffect(()=>{
+    setPage(1);
+  },[])
 
   /* CLOSE DROPDOWN ON OUTSIDE CLICK */
 
@@ -133,54 +144,48 @@ export default function HelpTable() {
   );
 
   return (
-    <>
-      {loading ? (
-        <div className="flex items-center justify-center w-full h-full">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-        </div>
-      ) : (
-        <div className="w-full bg-white rounded-xl p-4 max-h-[88%] flex flex-col">
-          <h2 className="font-inter font-medium text-[14px] text-black mb-3">
+        <div className="flex flex-col gap-4 overflow-y-auto max-h-180 bg-[#ffffff] rounded-xl p-4">
+         <h2 className="font-inter font-medium text-[14px] text-black ">
             List Of All Queries
           </h2>
 
-          <div className="w-full h-full overflow-x-auto flex-1 scrollbar-hide">
-            <div className="h-full overflow-y-auto scrollbar-hide">
-              <table className="w-full table-fixed min-w-200">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <table className="w-full table-auto">
                 <thead className="sticky top-0 bg-[#F8F8F8] z-10 font-inter font-medium text-[12px] text-[#747474]">
                   <tr>
-                    <th className="text-left py-3 px-2 w-[6%]">
+                    <th className="text-left py-4 px-2 w-[6%]">
                       S. No.
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[8%]">
+                    <th className="text-left py-4 px-2 w-[10%]">
                       Profile
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[18%]">
+                    <th className="text-left py-4 px-2 w-[18%]">
                       Name
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[20%]">
+                    <th className="text-left py-4 px-2 w-[20%]">
                       Email
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[22%]">
+                    <th className="text-left py-4 px-2 w-[22%]">
                       Description
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[10%]">
+                    <th className="text-left py-4 px-2 w-[12%]">
                       Date
                     </th>
 
-                    <th className="text-left py-3 px-2 w-[16%]">
+                    <th className="text-left py-4 px-2 w-[12%]">
                       Actions
                     </th>
                   </tr>
                 </thead>
-
-                <tbody>
-                  {helps.map(
+{
+  loading?(<TableLoader colSpan={7}/>):(<tbody>
+    {
+      helps.length>0?(helps.map(
                     (b: any, idx: number) => (
                       <tr
                         key={idx}
@@ -193,7 +198,7 @@ export default function HelpTable() {
                             1}
                         </td>
 
-                        <td className="py-3 px-2">
+                        <td className="py-4 px-2">
                           {b.user
                             .profile_image ? (
                             <div className="w-14 h-14 rounded-full overflow-hidden relative border border-[#ececec]">
@@ -217,41 +222,25 @@ export default function HelpTable() {
                           )}
                         </td>
 
-                        <td className="truncate px-2">
+                        <td className="break-all px-2 py-4">
                           {b.user.name}
                         </td>
 
-                        <td className="truncate px-2">
+                        <td className="break-all px-2 py-4">
                           {b.user.email}
                         </td>
 
-                        <td className="truncate px-2   " onClick={() =>
-                              setSelectedQuery(
-                                b.description ||
-                                  "No query available"
-                              )
-                            }>
-                          <div className="flex items-center gap-2 cursor-pointer" >
-                          <span>
-                            {(b.description ||
-                              "").length >
-                            30
-                              ? `${b.description.slice(
-                                  0,
-                                  30
-                                )}...`
-                              : b.description}
-                          </span>
-                          <Eye size={12}/>
-                          </div>
+                        <td className="break-all px-2 py-4">
+                            {b.description}
+
                         </td>
 
-                        <td className="truncate px-2">
+                        <td className="break-all px-2 py-4">
                           {b.created_at}
                         </td>
 
                         {/* ACTIONS */}
-                        <td className="px-2 py-3">
+                        <td className="px-2 py-4">
                           <div className="relative inline-block w-[80%]">
                             {/* BUTTON */}
                             <button
@@ -295,6 +284,7 @@ export default function HelpTable() {
 
                               <ChevronDown
                                 size={14}
+                                className="shrink-0"
                               />
                             </button>
 
@@ -343,29 +333,37 @@ export default function HelpTable() {
                         </td>
                       </tr>
                     )
-                  )}
-                </tbody>
+                  )):(
+                    <tr>
+                    <td
+                      colSpan={7}
+                      className="text-center py-10 text-[#747474] text-sm"
+                    >
+                      Queries not found
+                    </td>
+                  </tr>
+                  )
+    }
+                  
+                </tbody>)
+}
+                
               </table>
-            </div>
+            
 
             
           </div>
 
 
           {/* PAGINATION */}
-            <div className="flex items-center justify-between w-full bg-[#F8F8F8] py-2 px-2">
+            <div className="flex items-center justify-between w-full bg-[#F8F8F8] py-4 px-2">
+
               <p className="flex text-sm font-inter font-normal text-[#161616cb]">
-                Showing{" "}
-                {formatNumber(
-                  startItem
-                )}{" "}
-                to{" "}
-                {formatNumber(endItem)}{" "}
-                out of{" "}
-                {formatNumber(
-                  totalHelps
-                )}
-              </p>
+          {totalHelps === 0
+            ? `Showing 0 results`
+            : `Showing ${formatNumber(startItem)} to ${formatNumber(endItem)} out
+              of ${formatNumber(totalHelps)}`}
+        </p>
 
               <div className="flex items-center gap-6 text-sm font-inter font-medium">
                 <span
@@ -417,36 +415,8 @@ export default function HelpTable() {
               </div>
             </div>
         </div>
-      )}
 
-      {/* QUERY POPUP */}
-      {selectedQuery && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-          <div
-            className="bg-white rounded-xl p-5 w-125 flex flex-col gap-4"
-            ref={modalRef}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-inter text-lg font-semibold text-black">
-                Full Description
-              </h2>
-
-              <button
-                onClick={() =>
-                  setSelectedQuery("")
-                }
-                className="text-red-500 text-lg cursor-pointer"
-              >
-                ×
-              </button>
-            </div>
-
-            <p className="font-inter text-sm text-[#5e5e5e] leading-6 wrap-break">
-              {selectedQuery}
-            </p>
-          </div>
-        </div>
-      )}
-    </>
+      
   );
+
 }

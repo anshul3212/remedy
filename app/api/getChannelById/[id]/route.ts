@@ -38,13 +38,16 @@ export async function GET(
         },
 
         include: {
-          posts: true,
 
           _count: {
-            select: {
-              posts: true,
-            },
-          },
+  select: {
+    posts: {
+      where: {
+        is_active:true
+      },
+    },
+  },
+},
 
           channel_categories: {
             select: {
@@ -65,6 +68,7 @@ export async function GET(
         },
       });
 
+
     /* ================= CHANNEL NOT FOUND ================= */
 
     if (!channel) {
@@ -82,28 +86,12 @@ export async function GET(
     /* ================= FORMAT CHANNEL ================= */
 
     const formattedChannel = {
-      ...channel,
+  ...channel,
 
-      image: channel.image
-        ? await generateReadUrl(
-            channel.image
-          )
-        : null,
-
-      posts: await Promise.all(
-        channel.posts.map(
-          async (post: any) => ({
-            ...post,
-
-            media_url: post.media_url
-              ? await generateReadUrl(
-                  post.media_url
-                )
-              : null,
-          })
-        )
-      ),
-    };
+  image: channel.image
+    ? await generateReadUrl(channel.image)
+    : null,
+};
 
     /* ================= RESPONSE ================= */
 

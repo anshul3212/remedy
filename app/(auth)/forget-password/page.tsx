@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +13,8 @@ export default function ForgotPasswordPage() {
 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [token, setToken] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -76,32 +78,40 @@ export default function ForgotPasswordPage() {
   }, [countdown]);
 
   const forgetPassword = async () => {
-    if (!email.trim()) return;
+  if (!email.trim()) return;
 
-    try {
-      setSendingOtp(true);
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_AUTH_URL}/admin/auth/forgot-password`,
-        { email },
-      );
+  try {
+    setSendingOtp(true);
 
-      toast.success(res.data.message);
-      /* ================= REDIRECT ================= */
-      setStep(2);
-      return true;
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error?.message ||
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong";
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_DEV_URL}/admin/user/forgot-password`,
+      { email_id : email }
+    );
 
-      toast.error(errorMessage);
+    if (!res.data.success) {
+      toast.error(res.data.message || "Invalid email");
       return false;
-    } finally {
-      setSendingOtp(false);
     }
-  };
+
+    toast.success("OTP send successfully");
+
+    setStep(2);
+
+    return true;
+  } catch (error: any) {
+    const errorMessage =
+      error?.response?.data?.error?.message ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong";
+
+    toast.error(errorMessage);
+
+    return false;
+  } finally {
+    setSendingOtp(false);
+  }
+};
 
   const handleResendOtp = async () => {
     if (countdown > 0) return;
@@ -120,11 +130,9 @@ export default function ForgotPasswordPage() {
     try {
       setVerifyingOtp(true);
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_AUTH_URL}/admin/auth/verify-otp`,
-        { email, otp },
+        `${process.env.NEXT_PUBLIC_DEV_URL}/admin/user/verify-email-code`,
+        { email_id:email, code:otp },
       );
-
-      setToken(res.data.resetToken);
       toast.success("OTP verified");
       /* ================= REDIRECT ================= */
       setStep(3);
@@ -145,19 +153,12 @@ export default function ForgotPasswordPage() {
     try {
       setResettingPassword(true);
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_AUTH_URL}/admin/auth/reset-password`,
-        { password },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
+        `${process.env.NEXT_PUBLIC_DEV_URL}/admin/user/reset-password`,
+        { email_id:email,new_password:password }
       );
       setEmail("");
       setOtp("");
-      setToken("");
-      toast.success(res.data.message);
+      toast.success("password changed successfully");
       /* ================= REDIRECT ================= */
       router.push("/login");
     } catch (error: any) {
@@ -222,10 +223,10 @@ export default function ForgotPasswordPage() {
             </div>
 
             <button
-              disabled={isStep1Disabled}
+              disabled={isStep1Disabled || sendingOtp || !email.trim()}
               onClick={forgetPassword}
               className={`w-full h-12  rounded-lg bg-[#8B5CF6] text-white font-medium cursor-pointer ${
-                isStep1Disabled ? "opacity-50" : "opactity-100"
+                isStep1Disabled || sendingOtp || !email.trim() ? "opacity-50" : "opactity-100"
               }`}
             >
               {sendingOtp ? "Sending..." : "Send OTP"}
@@ -281,12 +282,12 @@ export default function ForgotPasswordPage() {
 
             <button
               onClick={verifyOtp}
-              disabled={isStep2Disabled}
+              disabled={isStep2Disabled || verifyingOtp || (!email.trim() && !otp.trim())}
               className={`w-full h-12  rounded-lg bg-[#8B5CF6] text-white font-medium cursor-pointer ${
-                isStep2Disabled ? "opacity-50" : "opactity-100"
+                isStep2Disabled || verifyingOtp || (!email.trim() && !otp.trim()) ? "opacity-50" : "opactity-100"
               }`}
             >
-              {verifyingOtp ? "Verifying..." : "Verify OTP"}
+              { verifyingOtp ? "Verifying..." : "Verify OTP"}
             </button>
           </>
         )}
@@ -308,13 +309,29 @@ export default function ForgotPasswordPage() {
                   New Password
                 </label>
 
+
+                <div className="flex items-center">
                 <input
-                  type="password"
+                  required
+                  placeholder="Enter password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="w-full h-12 px-4  border rounded-lg outline-none focus:border-[#8B5CF6]"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                  }}
+                  type={`${visible ? "text" : "password"}`}
+                  className="w-full h-12 px-4  border border-r-0 rounded-l-lg outline-none pl-4"
                 />
+                <div
+                  className="border w-12 h-12 flex items-center justify-center border-l rounded-r-lg cursor-pointer"
+                  onClick={() => setVisible((prev) => !prev)}
+                >
+                  {!visible ? (
+                    <Eye color="#000" size={20} />
+                  ) : (
+                    <EyeOff color="#000" size={20} />
+                  )}
+                </div>
+              </div>
 
                 <div className=" text-xs flex flex-col gap-1 mt-2">
                   <p
@@ -370,17 +387,28 @@ export default function ForgotPasswordPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-[#333]">
-                  Confirm Password
-                </label>
-
+                 <div className="flex items-center">
                 <input
-                  type="password"
+                  required
+                  placeholder="Enter password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm password"
-                  className="w-full h-12 px-4  border rounded-lg outline-none focus:border-[#8B5CF6]"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                  }}
+                  type={`${confirmVisible ? "text" : "password"}`}
+                  className="w-full h-12 px-4  border border-r-0 rounded-l-lg outline-none pl-4"
                 />
+                <div
+                  className="border w-12 h-12 flex items-center justify-center border-l rounded-r-lg cursor-pointer"
+                  onClick={() => setConfirmVisible((prev) => !prev)}
+                >
+                  {!confirmVisible ? (
+                    <Eye color="#000" size={20} />
+                  ) : (
+                    <EyeOff color="#000" size={20} />
+                  )}
+                </div>
+              </div>
 
                 {confirmPassword && password !== confirmPassword && (
                   <p className="text-red-500 text-xs ">
@@ -390,11 +418,13 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
+
+
             <button
-              disabled={isStep3Disabled}
+              disabled={isStep3Disabled || resettingPassword || (!password.trim() && !confirmPassword.trim())}
               onClick={resetPassword}
               className={`w-full h-12  rounded-lg bg-[#8B5CF6] text-white font-medium cursor-pointer ${
-                isStep3Disabled ? "opacity-50" : "opactity-100"
+                isStep3Disabled || resettingPassword || (!password.trim() && !confirmPassword.trim())? "opacity-50" : "opactity-100"
               }`}
             >
               {resettingPassword ? "Resetting..." : "Reset Password"}
