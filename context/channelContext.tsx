@@ -37,9 +37,10 @@ export interface Channel {
   channel_type: string;
   description: string;
   category_id: string | null;
-  total_members: string;
+  total_members: number;
   created_at: string;
   updated_at: string;
+  is_active:boolean;
   users:any;
   channel_members: ChannelMember[];
 
@@ -128,9 +129,11 @@ export function ChannelProvider({
   /* ================= FETCH CHANNELS ================= */
 
   const fetchChannels = async () => {
-    const token = localStorage.getItem(
-      "token"
-    );
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
     try {
       setLoading(true);
@@ -165,11 +168,6 @@ export function ChannelProvider({
     }
   };
 
-  /* ================= INIT ================= */
-
-  useEffect(() => {
-    fetchChannels();
-  }, [page]);
 
   return (
     <ChannelContext.Provider

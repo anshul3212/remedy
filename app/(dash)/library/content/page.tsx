@@ -2,15 +2,22 @@
 
 import ImageResize from "@/components/ui/imageResize";
 import Input from "@/components/ui/input";
-import TextEditor from "@/components/ui/textArea";
+import dynamic from "next/dynamic";
+// import TextEditor from "@/components/ui/textArea";
 import { useBlog } from "@/context/blogContext";
 import axios from "axios";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+const TextEditor = dynamic(() => import("@/components/ui/textArea"), {
+  ssr: false,
+  loading: () => <p></p>,
+});
 
 const Page = () => {
-  const { category, media, fetchBlogs, setMedia } = useBlog();
+  const { category, media, fetchBlogs, setMedia, fetchCategories} = useBlog();
+  const router = useRouter();
 
   const mediaTypeMap: Record<string, string> = {
     IMAGE: "ARTICLE",
@@ -21,6 +28,7 @@ const Page = () => {
 
   const [readTime, setReadTime] = useState("");
   const [content, setContent] = useState("");
+  const [loading,setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
@@ -33,6 +41,10 @@ const Page = () => {
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
+
+useEffect(()=>{
+  fetchCategories();
+},[])
 
   useEffect(() => {
     const handleClickOutside = (e: any) => {
@@ -58,7 +70,7 @@ const Page = () => {
 
     media: [
       {
-        media_url: media.media_url,
+        media_url: media.media_key,
         media_type: media.media_type,
         thumbnail_url: media.thumbnail_url,
       },
@@ -66,10 +78,14 @@ const Page = () => {
   };
 
   const uploadBlogs = async () => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("admin-token="))
+      ?.split("=")[1];
+    if (!token) return;
 
     if (!media?.media_url?.trim() || !media?.media_type?.trim()) {
-      toast.error("Please upload media")
+      toast.error("Please upload media");
       return;
     }
 
@@ -77,35 +93,35 @@ const Page = () => {
       (media.media_type === "VIDEO" || media.media_type === "AUDIO") &&
       !media?.thumbnail_url?.trim()
     ) {
-     
-toast.error("Please upload thumbnail")
+      toast.error("Please upload thumbnail");
       return;
     }
 
     if (!selectedCategories.length) {
-      toast.error("Please select at least one category")
-      
+      toast.error("Please select at least one category");
+
       return;
     }
 
     if (!title.trim()) {
-      toast.error("Please enter title")
+      toast.error("Please enter title");
       return;
     }
 
     if (!readTime.trim()) {
-      toast.error("Please enter read time")
+      toast.error("Please enter read time");
       return;
     }
 
     if (!content.trim()) {
-      toast.error("Please enter content")
+      toast.error("Please enter content");
       return;
     }
 
     try {
+      setLoading(true);
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_URL}/blog/create-blog`,
+        `${process.env.NEXT_PUBLIC_DEV_URL}/admin/blog/create-blog`,
         payload,
         {
           headers: {
@@ -115,7 +131,6 @@ toast.error("Please upload thumbnail")
         },
       );
       setUpload((prev) => !prev);
-      fetchBlogs();
       setTitle("");
 
       setReadTime("");
@@ -131,14 +146,17 @@ toast.error("Please upload thumbnail")
         thumbnail_key: "",
       });
       toast.success("blog submitted successfully");
-    } catch (error:any) {
+      router.push("/library");
+    } catch (error: any) {
       const message =
-      error?.response?.data?.message ||  
-      error?.response?.data?.error ||    
-      error.message ||                   
-      "Something went wrong";
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
 
       toast.error(message);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -164,7 +182,7 @@ toast.error("Please upload thumbnail")
                   ? category
                       .filter((c) => selectedCategories.includes(c.id))
                       .map((c) => c.name.replace(/_/g, " "))
-                      .join(", ")
+                      .join(" | ")
                   : "Please select categories"}
               </span>
 
@@ -205,7 +223,6 @@ toast.error("Please upload thumbnail")
               value={readTime}
               onChange={(e: any) => setReadTime(e.target.value)}
               placeholder={"Enter time"}
-              width={"w-[30%]"}
             />
           </div>
         </div>
@@ -217,11 +234,11 @@ toast.error("Please upload thumbnail")
 
       <button
         onClick={uploadBlogs}
-        className="text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer"
+        disabled ={loading}
+        className={`text-white rounded-sm w-30 px-2 py-3 bg-green-500 self-center cursor-pointer ${loading?"opacity-50 cursor-not-allowed":""}`}
       >
-        submit
+        {loading?"Submiting":"Submit"}
       </button>
-      <Toaster/>
     </div>
   );
 };

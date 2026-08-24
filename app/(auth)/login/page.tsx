@@ -18,8 +18,9 @@ const LoginLeft = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const isDisabled = !email.trim() || !password.trim();
+  const isDisabled = !email.trim() || !password.trim() || loading;
 
   const payload = {
     email_id: email,
@@ -28,8 +29,9 @@ const LoginLeft = () => {
 
   const handleLogin = async () => {
     try {
+      setLoading(true);
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_DEV_AUTH_URL}/sign-in-admin`,
+        `${process.env.NEXT_PUBLIC_DEV_URL}/auth/sign-in-admin`,
         payload,
       );
 
@@ -43,38 +45,32 @@ const LoginLeft = () => {
 
         expiryDate.setDate(expiryDate.getDate() + 30);
 
-        document.cookie = `token=${token}; path=/; expires=${expiryDate.toUTCString()}`;
+        document.cookie = `admin-token=${token}; path=/; expires=${expiryDate.toUTCString()}`;
       } else {
         // Session cookie
-        document.cookie = `token=${token}; path=/`;
+        document.cookie = `admin-token=${token}; path=/`;
       }
-
-      /* ================= LOCAL STORAGE ================= */
-
-      localStorage.setItem("token", token);
-
-      localStorage.setItem("user_name", res.data.data.full_name);
-
-      localStorage.setItem("user_image", res.data.data.profile_image);
 
       /* ================= RESET ================= */
 
       setEmail("");
 
       setPassword("");
-      toast.success("Signin Successfully")
+      toast.success("Signin Successfully");
 
       /* ================= REDIRECT ================= */
 
       router.push("/users");
-    } catch (error:any) {
+    } catch (error: any) {
       const message =
-      error?.response?.data?.message ||  
-      error?.response?.data?.error ||    
-      error.message ||                   
-      "Something went wrong";
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
 
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,17 +98,6 @@ const LoginLeft = () => {
       </div>
 
       <div className="bg-[white] p-4 rounded-xl h-full flex flex-col items-center justify-center">
-        <div className="flex items-center justify-center">
-          {/* <div className="relative w-20 h-20 rounded-full overflow-hidden">
-          <Image
-            src={"/logo.png"}
-            alt="logo"
-            fill
-            className="object-cover absolute"
-          />
-        </div> */}
-        </div>
-
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center justify-center gap-2">
             <h3 className="font-medium  text-[#000000] text-5xl">Sign In</h3>
@@ -136,7 +121,7 @@ const LoginLeft = () => {
                   Password
                 </label>
                 <label
-                  className=" font-normal text-sm text-[#0f0f0fbf] cursor-pointer"
+                  className=" font-normal text-sm text-[#0f0f0fbf] cursor-pointer hover:text-blue-500"
                   onClick={() => router.push("/forget-password")}
                 >
                   Forgot password?
@@ -196,7 +181,6 @@ const LoginLeft = () => {
           </form>
         </div>
       </div>
-
     </aside>
   );
 };

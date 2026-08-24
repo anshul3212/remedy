@@ -1,5 +1,6 @@
 
 
+import { verifyAuth } from "@/helper/auth";
 import { generateReadUrl } from "@/helper/awsUrl";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
@@ -33,6 +34,18 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+    const user = await verifyAuth(req);
+        
+          if (!user) {
+            return NextResponse.json(
+              {
+                message: "Unauthorized",
+              },
+              {
+                status: 401,
+              }
+            );
+          }
  
     const post = await prisma.posts.findUnique({
       where: {

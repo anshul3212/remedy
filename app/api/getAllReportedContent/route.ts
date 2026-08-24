@@ -1,3 +1,6 @@
+
+
+import { verifyAuth } from "@/helper/auth";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
 import { NextRequest, NextResponse } from "next/server";
@@ -28,100 +31,128 @@ export async function OPTIONS() {
 
 export async function GET(req: NextRequest) {
   try {
-    /* ================= PAGINATION ================= */
+    const user = await verifyAuth(req);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    /* ================= PAGINATION + FILTER ================= */
 
     const { searchParams } = new URL(req.url);
 
-    const page = parseInt(
-      searchParams.get("page") || "1"
+    const page = Math.max(
+      parseInt(searchParams.get("page") || "1"),
+      1
     );
 
-    const limit = parseInt(
-      searchParams.get("limit") || "10"
+    const limit = Math.max(
+      parseInt(searchParams.get("limit") || "10"),
+      1
     );
+
+    const type = (
+      searchParams.get("type") || "ALL"
+    ).toUpperCase();
 
     /* ================= FETCH POSTS ================= */
 
-    const reportedPosts =
-      await prisma.posts.findMany({
-        where: {
-          post_reports: {
-            some: {},
+    let formattedPosts: any[] = [];
+
+    if (type === "ALL" || type === "POST") {
+      const reportedPosts =
+        await prisma.posts.findMany({
+          where: {
+            post_reports: {
+              some: {},
+            },
+
+            is_active: true,
           },
 
-          is_active: true,
-        },
+          select: {
+            id: true,
+            title: true,
+            created_at: true,
 
-        select: {
-          id: true,
-          title: true,
-          created_at: true,
-          _count: {
-            select: {
-              post_reports: true,
+            _count: {
+              select: {
+                post_reports: true,
+              },
             },
           },
-        },
-      });
+        });
+
+      formattedPosts = reportedPosts.map(
+        (post) => ({
+          id: post.id,
+
+          type: "POST",
+
+          content: post.title,
+
+          created_at: post.created_at,
+
+          reportsCount:
+            post._count.post_reports,
+        })
+      );
+    }
 
     /* ================= FETCH COMMENTS ================= */
 
-    const reportedComments =
-      await prisma.comments.findMany({
-        where: {
-          comment_reports: {
-            some: {},
-          },
-        },
+    let formattedComments: any[] = [];
 
-        select: {
-          id: true,
-          comment: true,
-          created_at: true,
-          post_id:true,
-          _count: {
-            select: {
-              comment_reports: true,
+    if (type === "ALL" || type === "COMMENT") {
+      const reportedComments =
+        await prisma.comments.findMany({
+          where: {
+            comment_reports: {
+              some: {},
             },
           },
-        },
-      });
 
-    /* ================= FORMAT POSTS ================= */
+          select: {
+            id: true,
+            comment: true,
+            created_at: true,
+            post_id: true,
 
-    const formattedPosts =
-      reportedPosts.map((post) => ({
-        id: post.id,
+            _count: {
+              select: {
+                comment_reports: true,
+              },
+            },
+          },
+        });
 
-        type: "POST",
+      formattedComments =
+        reportedComments.map(
+          (comment) => ({
+            id: comment.id,
 
-        content: post.title,
+            type: "COMMENT",
 
-        created_at: post.created_at,
+            post_id: comment.post_id,
 
-        reportsCount:
-          post._count.post_reports,
-      }));
+            content: comment.comment,
 
-    /* ================= FORMAT COMMENTS ================= */
+            created_at:
+              comment.created_at,
 
-    const formattedComments =
-      reportedComments.map((comment) => ({
-        id: comment.id,
-
-        type: "COMMENT",
-
-        post_id : comment.post_id,
-
-        content: comment.comment,
-
-        created_at: comment.created_at,
-
-
-        reportsCount:
-          comment._count
-            .comment_reports,
-      }));
+            reportsCount:
+              comment._count
+                .comment_reports,
+          })
+        );
+    }
 
     /* ================= MERGE + SORT ================= */
 
@@ -130,21 +161,16 @@ export async function GET(req: NextRequest) {
       ...formattedComments,
     ].sort(
       (a, b) =>
-        new Date(
-          b.created_at
-        ).getTime() -
-        new Date(
-          a.created_at
-        ).getTime()
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
     );
 
     /* ================= PAGINATION ================= */
 
     const total = mergedData.length;
 
-    const totalPages = Math.ceil(
-      total / limit
-    );
+    const totalPages =
+      Math.ceil(total / limit);
 
     const startIndex =
       (page - 1) * limit;

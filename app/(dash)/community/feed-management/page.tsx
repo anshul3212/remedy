@@ -1,139 +1,332 @@
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePost } from "@/context/getAllPostContext";
-import { Heart, MessageSquare, Trash } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  Trash,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import Loader from "@/components/ui/loaders/loader";
+import DeleteModal from "@/components/ui/deleteModal";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 const Page = () => {
-  const { posts, loading } = usePost();
+  const {
+    posts,
+    loading,
+    loadingMore,
+    fetchPosts,
+    page,
+    hasNextPage,
+  } = usePost();
+
   const router = useRouter();
 
-  const scrollRef = useRef<HTMLDivElement>(null);
+  /* ================= REFS ================= */
 
-  const [visibleCount, setVisibleCount] = useState(8);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  /* ================= STATE ================= */
+
+  const [columnCount, setColumnCount] = useState(4);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedMediaId,setSelectedMediaId] = useState<number|null>(null)
+
+  /* ================= RESPONSIVE COLUMNS ================= */
+
+  useEffect(() => {
+    const updateColumnCount = () => {
+      if (window.innerWidth >= 1024) {
+        setColumnCount(4);
+      } else if (window.innerWidth >= 768) {
+        setColumnCount(3);
+      } else {
+        setColumnCount(2);
+      }
+    };
+
+    updateColumnCount();
+
+    window.addEventListener(
+      "resize",
+      updateColumnCount,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        updateColumnCount,
+      );
+    };
+  }, []);
+
+  /* ================= DATA ================= */
 
   const filteredPosts = useMemo(() => {
     return (
       posts?.filter(
-        (post: any) => post.post_media && post.post_media.length > 0,
+        (post: any) =>
+          post.post_media &&
+          post.post_media.length > 0,
       ) || []
     );
   }, [posts]);
 
   const allMedia = useMemo(() => {
     return filteredPosts.flatMap((post: any) =>
-      post.post_media.map((media: any, index: number) => ({
-        media,
-        post,
-        index,
-      })),
+      post.post_media.map(
+        (media: any, index: number) => ({
+          media,
+          post,
+          index,
+        }),
+      ),
     );
   }, [filteredPosts]);
 
-  const visibleMedia = allMedia.slice(0, visibleCount);
+  /* ================= STABLE COLUMNS ================= */
+
+  const columns = useMemo(() => {
+    const result: any[][] = Array.from(
+      { length: columnCount },
+      () => [],
+    );
+
+    allMedia.forEach((item: any, index: number) => {
+      result[index % columnCount].push(item);
+    });
+
+    return result;
+  }, [allMedia, columnCount]);
+
+  /* ================= INITIAL FETCH ================= */
 
   useEffect(() => {
+    fetchPosts(1);
+  }, []);
+
+  /* ================= SCROLL ================= */
+
+  const handleScroll = () => {
     const container = scrollRef.current;
 
-    const handleScroll = () => {
-      if (!container) return;
+    if (!container) {
+      return;
+    }
 
-      const scrollTop = container.scrollTop;
-      const containerHeight = container.clientHeight;
-      const scrollHeight = container.scrollHeight;
+    if (loading || loadingMore) {
+      return;
+    }
 
-      if (scrollTop + containerHeight >= scrollHeight - 200) {
-        setVisibleCount((prev) => prev + 8);
-      }
-    };
+    if (!hasNextPage) {
+      return;
+    }
 
-    container?.addEventListener("scroll", handleScroll);
+    const scrollPosition =
+      container.scrollTop +
+      container.clientHeight;
 
-    return () => {
-      container?.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+    const scrollHeight =
+      container.scrollHeight;
+
+    if (
+      scrollPosition >=
+      scrollHeight - 200
+    ) {
+      fetchPosts(page + 1);
+    }
+  };
+
+
+  const deletePost = async (
+  postId: string,
+  reason: string
+) => {
+  const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("admin-token="))
+    ?.split("=")[1];
+
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+ const res =  await axios.post(
+    `${process.env.NEXT_PUBLIC_DEV_URL}/admin/community/remove-post`,
+    {
+          post_id: postId,
+          remove_reason: reason,
+        },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  toast.success("Post deleted");
+
+  setSelectedMediaId(null);
+
+  await fetchPosts(1);
+};
+ 
+  /* ================= UI ================= */
 
   return (
     <>
       {loading ? (
-        <div className="flex items-center justify-center w-[80%] h-[80%]">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-        </div>
+        <Loader />
       ) : (
         <div
           ref={scrollRef}
-          className=" font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]"
+          onScroll={handleScroll}
+          className="font-inter font-bold py-8 px-14 flex flex-col gap-4 overflow-y-auto h-[calc(100vh-100px)]"
         >
           <h1 className="font-inter font-medium text-[20px] text-[#000000]">
             Feed Management
-          </h1> 
+          </h1>
 
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            {visibleMedia.map(({ media, post, index }: any) => (
-              <motion.div
-                key={`${post.id}-${index}`}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.4,
-                  delay: index * 0.03,
-                }}
-                whileHover={{ scale: 1.02 }}
-                className="relative overflow-hidden rounded-xl break-inside-avoid group cursor-pointer"
-                onClick={() =>
-                {
-                router.push(
-  `/community/feed-management/${post.id}?mediaId=${media.id}`
-)
-               
-                }
-                  
-                }
-              >
-                <img
-                  src={media.media_url}
-                  alt="post-media"
-                  className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                />
+          {/* ================= MEDIA GRID ================= */}
 
-                {/* Overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center gap-4 p-2"
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-start">
+            {columns.map(
+              (
+                column,
+                columnIndex,
+              ) => (
+                <div
+                  key={columnIndex}
+                  className="flex flex-col gap-4"
                 >
-                    <div className="flex items-center justify-between w-full">
+                  {column.map(
+                    ({
+                      media,
+                      post,
+                    }: any) => (
+                      <motion.div
+                        key={`${post.id}-${media.id}`}
+                        initial={{
+                          opacity: 0,
+                          y: 40,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        transition={{
+                          duration: 0.4,
+                        }}
+                        whileHover={{
+                          scale: 1.02,
+                        }}
+                        className="relative overflow-hidden rounded-xl group cursor-pointer"
+                        onClick={() => {
+                          router.push(
+                            `/community/feed-management/${post.id}?mediaId=${media.id}`,
+                          );
+                        }}
+                      >
+                        <Image
+                          src={
+                            media.media_url
+                          }
+                          alt="post-media"
+                          width={500}
+                          height={500}
+                          loading="lazy"
+                          unoptimized
+                          className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
 
-                 
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <Heart size={18} color="#ffffff" />
-                      <span className="text-sm font-inter font-bold text-white">
-                        {post?.total_likes}
-                      </span>
-                    </div>
+                        {/* ================= OVERLAY ================= */}
 
-                    <div className="flex items-center gap-2">
-                      <MessageSquare size={18} color="#ffffff" />
-                      <span className="text-sm font-inter font-bold text-white">
-                        {post?.total_comments}
-                      </span>
-                    </div>
-                  </div>
+                        <motion.div
+                          initial={{
+                            opacity: 0,
+                          }}
+                          whileHover={{
+                            opacity: 1,
+                          }}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center gap-4 p-2"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-6">
+                              {/* Likes */}
 
-                 
-                  <Trash size={18} color="#e62828" className="cursor-pointer"/>
-                     </div>
-                </motion.div>
-              </motion.div>
-            ))}
+                              <div className="flex items-center gap-2">
+                                <Heart
+                                  size={18}
+                                  color="#ffffff"
+                                />
+
+                                <span className="text-sm font-inter font-bold text-white">
+                                  {
+                                    post?.total_likes
+                                  }
+                                </span>
+                              </div>
+
+                              {/* Comments */}
+
+                              <div className="flex items-center gap-2">
+                                <MessageSquare
+                                  size={
+                                    18
+                                  }
+                                  color="#ffffff"
+                                />
+
+                                <span className="text-sm font-inter font-bold text-white">
+                                  {
+                                    post?.total_comments
+                                  }
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Delete */}
+
+                            <Trash
+                              size={18}
+                              color="#e62828"
+                              className="cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMediaId(post.id);
+                                setOpenModal(true);
+                              }}
+                            />
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    ),
+                  )}
+                </div>
+              ),
+            )}
           </div>
+
+          {/* ================= LOADING MORE ================= */}
+
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <Loader />
+            </div>
+          )}
+
+          {/* delete modal */}
+          {openModal && selectedMediaId !== null && (
+  <DeleteModal
+    id={String(selectedMediaId)}
+    setOpenModal={setOpenModal}
+    onDelete={deletePost}
+  />
+)}
         </div>
       )}
     </>

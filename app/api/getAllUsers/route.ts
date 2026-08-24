@@ -1,5 +1,6 @@
 
 
+import { verifyAuth } from "@/helper/auth";
 import { generateReadUrl } from "@/helper/awsUrl";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
@@ -7,6 +8,18 @@ import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await verifyAuth(req);
+        
+          if (!user) {
+            return NextResponse.json(
+              {
+                message: "Unauthorized",
+              },
+              {
+                status: 401,
+              }
+            );
+          }
     /* ================= PAGINATION ================= */
 
     const { searchParams } = new URL(req.url);
@@ -37,7 +50,7 @@ export async function GET(req: NextRequest) {
       },
 
       orderBy: {
-        id: "asc",
+        created_at: "desc",
       },
     });
 

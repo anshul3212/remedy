@@ -49,17 +49,26 @@ button{
 }
 
 
-.jodit-wysiwyg ul {
-  list-style-type: disc !important;
-  padding-left: 24px !important;
-  margin-left: 12px !important;
+button:active {
+  transform: scale(0.9);
+  opacity: 80%;
+  transition: all;
 }
 
-.jodit-wysiwyg ol {
-  list-style-type: decimal !important;
-  padding-left: 24px !important;
-  margin-left: 12px !important;
+button:hover {
+  opacity: 90%;
+  transition: all;
 }
+
+button:not(:disabled):hover {
+  /* opacity: 90%; */
+  transition: all;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 
 .jodit-wysiwyg li {
   display: list-item !important;
@@ -116,3 +125,79 @@ button{
   max-width: 100% !important;
 }
 
+
+
+
+
+
+.ck p{
+  color: #000000;
+  font-size: 18px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+.ck h2{
+
+  font-size: 28px !important;
+  color: #000000;
+  font-family: var(--font-inter);
+}
+
+.ck h3{
+  color: #000000;
+  font-size: 24px;
+  font-family: var(--font-inter);
+}
+
+.ck h4{
+  color: #000000;
+  font-size: 20px;
+  font-family: var(--font-inter);
+}
+
+.ck p{
+  color: #070707;
+  font-size: 16px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+
+.ck ul{
+
+  padding-left: 24px !important;
+  margin-left: 12px !important;
+}
+.ck ol{
+  
+  padding-left: 24px !important;
+  margin-left: 12px !important;
+}
+
+.ck li{
+  color: #070707;
+  font-size: 16px;
+  font-weight: normal;
+  font-family: var(--font-inter);
+}
+
+.ck .ck-powered-by{
+  display: none;
+}
+
+.ck a{
+  color: #0e74fa;
+  font-size: 16px;
+}
+.ck.ck-editor__main > .ck-editor__editable{
+  background-color: var(--background)!important;
+  height: 300px !important;
+  font-family: var(--font-inter);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.ck.ck-editor__editable > .ck-placeholder::before {
+  color: #000000bf !important;
+  font-size: 14px;
+  font-weight: normal;
+}

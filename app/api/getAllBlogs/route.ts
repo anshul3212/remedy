@@ -1,86 +1,24 @@
-
+import { verifyAuth } from "@/helper/auth";
 import { prisma } from "@/lib/prisma";
 import { serialize } from "@/lib/serialize";
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
-
-interface BlogMedia {
-  id?: bigint;
-
-  media_url?: string | null;
- media_key?: string | null,
-  thumbnail_url?: string | null;
-  thumbnail_key?: string | null;
-
-  created_at?: Date;
-
-  updated_at?: Date;
-}
-
-interface BlogCategory {
-  id?: bigint;
-
-  mstr_categories: {
-    id?: bigint;
-
-    name?: string;
-
-    [key: string]: any;
-  };
-
-  [key: string]: any;
-}
-
-interface Blog {
-  id: bigint;
-
-  uuid: string;
-
-  type: "BLOG" | "NEWS" | string;
-
-  title: string;
-
-  description: string;
-
-  read_time: number;
-
-  status:
-    | "DRAFT"
-    | "PUBLISHED"
-    | string;
-
-  created_at: Date;
-
-  updated_at: Date;
-
-  blog_categories: BlogCategory[];
-
-  blog_media: BlogMedia[];
-}
+import { blog_type } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 
 /* ================= CORS ================= */
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin":
-    "*",
-
-  "Access-Control-Allow-Methods":
-    "GET, POST, PUT, DELETE, OPTIONS",
-
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 /* ================= OPTIONS ================= */
 
 export async function OPTIONS() {
   return NextResponse.json(
-    {}, 
+    {},
     {
       status: 200,
-
       headers: corsHeaders,
     }
   );
@@ -88,125 +26,132 @@ export async function OPTIONS() {
 
 /* ================= GET BLOGS ================= */
 
-export async function GET(
-  req: NextRequest
-) {
+export async function GET(req: NextRequest) {
   try {
-    /* ================= PAGINATION ================= */
+    /* ================= AUTH ================= */
 
-    const { searchParams } =
-      new URL(req.url);
+    const user = await verifyAuth(req);
 
-    const page = parseInt(
-      searchParams.get("page") || "1"
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: "Unauthorized",
+        },
+        {
+          status: 401,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    /* ================= QUERY PARAMS ================= */
+
+    const { searchParams } = new URL(req.url);
+
+    const page = Math.max(
+      1,
+      parseInt(searchParams.get("page") || "1")
     );
 
-    const limit = parseInt(
-      searchParams.get("limit") || "10"
+    const limit = Math.max(
+      1,
+      parseInt(searchParams.get("limit") || "10")
     );
+
+    const typeParam = searchParams.get("type");
+
+    /* ================= VALIDATE TYPE ================= */
+
+    const validTypes = Object.values(blog_type);
+
+    const type = typeParam
+      ? typeParam.trim().replace(/^["']|["']$/g, "").toUpperCase()
+      : null;
+
+    if (type && !validTypes.includes(type as blog_type)) {
+      return NextResponse.json(
+        {
+          message: "Invalid blog type",
+          allowedTypes: validTypes,
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
 
     const skip = (page - 1) * limit;
 
+    /* ================= TYPE FILTER ================= */
+
+    const where = type
+      ? {
+          type: type as blog_type,
+        }
+      : {};
+
     /* ================= TOTAL BLOGS ================= */
 
-    const total =
-      await prisma.blogs.count();
+    const total = await prisma.blogs.count({
+      where,
+    });
 
     /* ================= GET BLOGS ================= */
 
-    const blogs =
-      await prisma.blogs.findMany({
-        skip,
+    const blogs = await prisma.blogs.findMany({
+      where,
 
-        take: limit,
+      skip,
 
-        orderBy: {
-          updated_at: "desc",
-        },
+      take: limit,
 
-        include: {
-          blog_categories: {
-            select: {
-              mstr_categories: {
-                select:{
-                  name:true
-                }
+      orderBy: {
+        updated_at: "desc",
+      },
+
+      include: {
+        blog_categories: {
+          select: {
+            mstr_categories: {
+              select: {
+                name: true,
               },
             },
           },
-
-          // blog_media: true,
         },
-      });
+      },
+    });
 
-    /* ================= FORMAT BLOGS ================= */
+    /* ================= PAGINATION ================= */
 
-    // const formattedBlogs =
-    //   await Promise.all(
-    //     blogs.map(
-    //       async (blog: Blog) => ({
-    //         ...blog,
-
-    //         blog_media:
-    //           await Promise.all(
-    //             blog.blog_media.map(
-    //               async (media) => ({
-    //                 ...media,
-    //             media_key: media.media_url,
-    //                 media_url:
-    //                   media.media_url
-    //                     ? await generateReadUrl(
-    //                         media.media_url
-    //                       )
-    //                     : null,
-    //                 thumbnail_key:media.thumbnail_url,
-    //                 thumbnail_url:
-    //               media.thumbnail_url
-    //                 ? await generateReadUrl(
-    //                     media.thumbnail_url
-    //                   )
-    //                 : null,
-    //               })
-    //             )
-    //           ),
-    //       })
-    //     )
-    //   );
+    const totalPages = Math.ceil(total / limit);
 
     /* ================= RESPONSE ================= */
 
     return NextResponse.json(
       {
-        message: "all blogs found",
+        message: type
+          ? `${type} blogs found`
+          : "all blogs found",
 
-        blogs: serialize(
-          blogs
-        ),
+        blogs: serialize(blogs),
 
         pagination: {
           currentPage: page,
-
           limit,
-
           total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
 
-          totalPages: Math.ceil(
-            total / limit
-          ),
-
-          hasNextPage:
-            page <
-            Math.ceil(
-              total / limit
-            ),
-
-          hasPrevPage:
-            page > 1,
+        filter: {
+          category: type,
         },
       },
       {
         status: 200,
-
         headers: corsHeaders,
       }
     );
@@ -214,12 +159,10 @@ export async function GET(
 
     return NextResponse.json(
       {
-        message:
-          "Internal Server Error",
+        message: "Internal Server Error",
       },
       {
         status: 500,
-
         headers: corsHeaders,
       }
     );
